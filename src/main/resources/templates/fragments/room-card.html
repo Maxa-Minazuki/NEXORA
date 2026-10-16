@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="kk" xmlns:th="http://www.thymeleaf.org">
+<body>
+<!-- room: Room; availClass: free|busy|neutral; availLabel: мәтін; bookHref: брондау сілтемесі -->
+<article th:fragment="card(room, availClass, availLabel, bookHref)" class="room-card reveal"
+         th:classappend="'t-' + ${room.type.cssKey}">
+    <a th:href="@{/rooms/{slug}(slug=${room.slug})}" class="room-media" tabindex="-1" aria-hidden="true">
+        <img th:src="${room.imageUrl}" th:alt="${room.name}" loading="lazy" width="800" height="500">
+        <span class="room-type" th:text="${room.type.label}">Networking</span>
+        <span class="room-price-tag"><span th:text="${@fmt.money(room.hourlyRate)}">12 000 ₸</span> <small>/ сағ</small></span>
+    </a>
+    <div class="room-body">
+        <div class="row between">
+            <h3><a th:href="@{/rooms/{slug}(slug=${room.slug})}" th:text="${room.name}">Connect Room</a></h3>
+            <span class="availability" th:classappend="${availClass}">
+                <i class="bi" aria-hidden="true"
+                   th:classappend="${availClass == 'free'} ? 'bi-check-circle-fill' : (${availClass == 'busy'} ? 'bi-clock-history' : 'bi-calendar-check')"></i>
+                <span th:text="${availLabel}">Бос</span>
+            </span>
+        </div>
+        <p th:text="${room.shortDescription}">Сипаттама</p>
+        <div class="room-specs">
+            <span><i class="bi bi-people" aria-hidden="true"></i><span th:text="${room.capacity} + ' адамға дейін'">12 адам</span></span>
+            <span><i class="bi bi-arrows-angle-expand" aria-hidden="true"></i><span th:text="${room.area} + ' м²'">36 м²</span></span>
+        </div>
+        <div class="chips" aria-label="Жабдықтар">
+            <span class="chip" th:each="item, st : ${room.equipment}" th:if="${st.index < 3}" th:text="${item}">Wi‑Fi</span>
+            <span class="chip" th:if="${room.equipment.size() > 3}" th:text="'+' + ${room.equipment.size() - 3}">+1</span>
+        </div>
+        <div class="room-foot">
+            <a th:href="@{/rooms/{slug}(slug=${room.slug})}" class="btn btn-ghost btn-sm"
+               th:attr="aria-label=${room.name} + ' — толығырақ'">Толығырақ</a>
+            <a th:href="${bookHref}" class="btn btn-primary btn-sm"
+               th:attr="aria-label=${room.name} + ' бөлмесін брондау'">Брондау</a>
+        </div>
+    </div>
+</article>
+</body>
+</html>

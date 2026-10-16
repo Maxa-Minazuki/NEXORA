@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="kk" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Әкімші · Бөлмелер')}"></head>
+<body class="admin-body">
+<div class="admin-shell">
+    <th:block th:replace="~{admin/fragments :: sidebar}"></th:block>
+    <main id="main" class="admin-main">
+        <div class="admin-top">
+            <div>
+                <h1>Бөлмелер</h1>
+                <p>Өшірілген бөлме каталогта көрінбейді, бірақ оның брондау және төлем тарихы сақталады.</p>
+            </div>
+            <a href="/admin/rooms/new" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg" aria-hidden="true"></i> Бөлме қосу</a>
+        </div>
+
+        <div class="table-wrap" th:if="${!rooms.isEmpty()}">
+            <table class="table responsive">
+                <thead><tr><th>Бөлме</th><th>Түрі</th><th class="num">Сыйымдылық</th><th class="num">Аудан</th><th class="num">Баға / сағ</th><th>Статус</th><th>Әрекеттер</th></tr></thead>
+                <tbody>
+                <tr th:each="r : ${rooms}">
+                    <td data-label="Бөлме">
+                        <div class="person">
+                            <img class="thumb" th:src="${r.imageUrl}" alt="" width="56" height="44">
+                            <div><strong th:text="${r.name}">Room</strong><small class="muted" th:text="${r.equipment.size()} + ' жабдық'">4</small></div>
+                        </div>
+                    </td>
+                    <td data-label="Түрі" th:text="${r.type.label}">Type</td>
+                    <td data-label="Сыйымдылық" class="num" th:text="${r.capacity} + ' адам'">12</td>
+                    <td data-label="Аудан" class="num" th:text="${r.area} + ' м²'">36</td>
+                    <td data-label="Баға / сағ" class="num" th:text="${@fmt.money(r.hourlyRate)}">12 000</td>
+                    <td data-label="Статус">
+                        <span class="badge success" th:if="${r.active}">Белсенді</span>
+                        <span class="badge neutral" th:unless="${r.active}">Өшірілген</span>
+                    </td>
+                    <td data-label="Әрекеттер">
+                        <div class="actions">
+                            <a th:href="@{/admin/rooms/{id}/edit(id=${r.id})}" class="btn btn-soft btn-sm"><i class="bi bi-pencil" aria-hidden="true"></i> Өңдеу</a>
+                            <form th:action="@{/admin/rooms/{id}/toggle(id=${r.id})}" method="post"
+                                  th:attr="data-confirm=${r.active} ? 'Бөлме каталогтан жасырылады және жаңа брондау қабылдамайды. Бар брондаулар сақталады.' : 'Бөлме қайтадан каталогта көрінеді.'"
+                                  data-confirm-title="Бөлме статусын өзгерту керек пе?">
+                                <button type="submit" class="btn btn-ghost btn-sm" th:text="${r.active} ? 'Өшіру' : 'Белсендіру'">Өшіру</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="empty" th:if="${rooms.isEmpty()}">
+            <div class="empty-icon" aria-hidden="true"><i class="bi bi-door-closed"></i></div>
+            <h3>Деректер табылмады</h3><p>Әзірге бөлме қосылмаған.</p>
+            <a href="/admin/rooms/new" class="btn btn-primary">Бөлме қосу</a>
+        </div>
+    </main>
+</div>
+<div th:replace="~{fragments/layout :: toasts}"></div>
+<dialog th:replace="~{fragments/layout :: confirm}"></dialog>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

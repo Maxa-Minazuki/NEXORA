@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="kk" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(${room.name})}"></head>
+<body>
+<div th:replace="~{fragments/layout :: header}"></div>
+
+<main id="main" class="container">
+    <div class="page-head">
+        <nav class="crumbs" aria-label="Навигация жолы">
+            <a href="/">Басты бет</a><i class="bi bi-chevron-right" aria-hidden="true"></i>
+            <a href="/rooms">Бөлмелер</a><i class="bi bi-chevron-right" aria-hidden="true"></i>
+            <span th:text="${room.name}">Room</span>
+        </nav>
+    </div>
+
+    <div class="room-hero">
+        <div class="room-hero-img">
+            <img th:src="${room.imageUrl}" th:alt="${room.name} + ' бөлмесінің суреті'" width="1000" height="667">
+        </div>
+        <div class="card card-pad">
+            <span class="badge" th:text="${room.type.label}">Networking</span>
+            <h1 style="font-size:clamp(28px,3.4vw,40px);margin-top:12px" th:text="${room.name}">Connect Room</h1>
+            <p class="muted" style="margin-top:12px" th:text="${room.description}">Сипаттама</p>
+            <div class="spec-grid">
+                <div class="spec"><small>Сыйымдылық</small><strong th:text="${room.capacity} + ' адам'">12</strong></div>
+                <div class="spec"><small>Аудан</small><strong th:text="${room.area} + ' м²'">36 м²</strong></div>
+                <div class="spec"><small>Бағасы</small><strong th:text="${@fmt.money(room.hourlyRate)}">12 000 ₸</strong></div>
+            </div>
+            <div class="alert alert-info" style="margin-bottom:18px">
+                <i class="bi bi-info-circle" aria-hidden="true"></i>
+                <span th:text="'Әр басталған сағат толық есептеледі. Брондау кезінде жалпы соманың ' + ${club.depositPercent} + '% депозиті төленеді.'">Ереже</span>
+            </div>
+            <a th:href="@{/bookings/new(room=${room.slug}, date=${selectedDate})}" class="btn btn-primary btn-block">
+                <i class="bi bi-calendar-plus" aria-hidden="true"></i> Брондау
+            </a>
+        </div>
+    </div>
+
+    <div class="layout-aside-right" style="margin-top:28px">
+        <section class="card card-pad" aria-labelledby="eq-title">
+            <h2 class="card-title" id="eq-title">Жабдықтар мен ыңғайлылықтар</h2>
+            <p class="card-sub">Барлығы брондау бағасына кіреді.</p>
+            <ul class="equip-list" th:if="${!room.equipment.isEmpty()}">
+                <li th:each="item : ${room.equipment}"><i class="bi bi-check2-circle" aria-hidden="true"></i><span th:text="${item}">Wi‑Fi</span></li>
+            </ul>
+            <p class="muted" th:if="${room.equipment.isEmpty()}">Жабдықтар тізімі әлі толтырылмаған.</p>
+        </section>
+
+        <section class="card card-pad" aria-labelledby="busy-title">
+            <h2 class="card-title" id="busy-title">Бос уақыт</h2>
+            <p class="card-sub">Күнді таңдап, бөлменің бос емес уақытын көріңіз.</p>
+            <div class="day-tabs" role="list">
+                <a th:each="d : ${days}" role="listitem" class="day-tab"
+                   th:href="@{/rooms/{slug}(slug=${room.slug}, date=${d})}"
+                   th:classappend="${d == selectedDate} ? 'is-active'"
+                   th:attr="aria-current=${d == selectedDate} ? 'date' : null">
+                    <small th:text="${@fmt.weekdayShort(d)}">Дс</small>
+                    <strong th:text="${d.dayOfMonth}">14</strong>
+                </a>
+            </div>
+            <p style="margin:16px 0 10px;font-weight:600" th:text="${@fmt.dayLong(selectedDate)}">14 қазан</p>
+            <div class="slot-list">
+                <span class="slot free" th:if="${busySlots.isEmpty()}">Күні бойы бос</span>
+                <span class="slot" th:each="s : ${busySlots}" th:text="${@fmt.time(s.start)} + '–' + ${@fmt.time(s.end)} + ' бос емес'">10:00–12:00</span>
+            </div>
+            <p class="tiny muted" style="margin-top:14px" th:text="'Жұмыс уақыты: ' + ${#temporals.format(club.openingTime, 'HH:mm')} + '–' + ${#temporals.format(club.closingTime, 'HH:mm')}">08:00–22:00</p>
+        </section>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<div th:replace="~{fragments/layout :: toasts}"></div>
+<dialog th:replace="~{fragments/layout :: confirm}"></dialog>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

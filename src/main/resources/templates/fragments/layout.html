@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="kk" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:fragment="head(title)">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="JYLY — networking бөлмелері мен келіссөз кеңістіктерін брондау жүйесі">
+    <meta name="theme-color" content="#F8F5EF">
+    <title th:text="${title} + ' · JYLY'">JYLY</title>
+    <link rel="icon" href="/images/favicon.svg" type="image/svg+xml">
+    <link rel="preload" href="/fonts/inter-cyrillic.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="stylesheet" href="/vendor/bootstrap-icons/bootstrap-icons.min.css">
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+
+<header th:fragment="header" class="site-header">
+    <a class="skip-link" href="#main">Негізгі мазмұнға өту</a>
+    <div class="container nav">
+        <a href="/" class="brand" aria-label="JYLY — басты бет">
+            <span class="brand-mark" aria-hidden="true"><i class="bi bi-cup-hot"></i></span>
+            JYLY
+        </a>
+        <button class="nav-toggle" type="button" data-nav-toggle aria-controls="nav-links" aria-expanded="false" aria-label="Мәзірді ашу">
+            <i class="bi bi-list" aria-hidden="true"></i>
+        </button>
+        <nav class="nav-links" id="nav-links" aria-label="Негізгі мәзір">
+            <a href="/" th:classappend="${currentPath == '/'} ? 'is-active'" th:attr="aria-current=${currentPath == '/'} ? 'page' : null">Басты бет</a>
+            <a href="/rooms" th:classappend="${#strings.startsWith(currentPath ?: '', '/rooms')} ? 'is-active'">Бөлмелер</a>
+            <a href="/#how">Қалай жұмыс істейді</a>
+            <a href="/about" th:classappend="${currentPath == '/about'} ? 'is-active'">Біз туралы</a>
+            <a href="/my-bookings" th:classappend="${#strings.startsWith(currentPath ?: '', '/my-bookings')} ? 'is-active'">Брондау тарихы</a>
+            <a href="/login" sec:authorize="!hasRole('ADMIN')" th:classappend="${currentPath == '/login'} ? 'is-active'">Кіру</a>
+            <a href="/admin" sec:authorize="hasRole('ADMIN')"><i class="bi bi-speedometer2" aria-hidden="true"></i> Әкімші</a>
+            <span class="nav-cta"><a href="/bookings/new" class="btn btn-primary btn-sm">Бөлмені брондау</a></span>
+        </nav>
+    </div>
+</header>
+
+<footer th:fragment="footer" class="site-footer">
+    <div class="container">
+        <div class="footer-grid">
+            <div>
+                <a href="/" class="brand"><span class="brand-mark" aria-hidden="true"><i class="bi bi-cup-hot"></i></span>JYLY</a>
+                <p class="footer-about">Маңызды кездесулерге, networking кештеріне және командалық жұмысқа арналған жылы әрі заманауи клуб кеңістігі.</p>
+            </div>
+            <div>
+                <h4>Навигация</h4>
+                <ul>
+                    <li><a href="/rooms">Бөлмелер</a></li>
+                    <li><a href="/#how">Қалай жұмыс істейді</a></li>
+                    <li><a href="/about">Біз туралы</a></li>
+                    <li><a href="/bookings/new">Бөлмені брондау</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4>Клиентке</h4>
+                <ul>
+                    <li><a href="/my-bookings">Брондау тарихы</a></li>
+                    <li><a href="/my-bookings#lookup">Брондауды табу</a></li>
+                    <li><a href="/login">Әкімшіге кіру</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4>Байланыс</h4>
+                <ul>
+                    <li class="contact-line"><i class="bi bi-geo-alt" aria-hidden="true"></i><span>Астана, Қабанбай батыр даңғылы, 11 (демо)</span></li>
+                    <li class="contact-line"><i class="bi bi-telephone" aria-hidden="true"></i><span>+7 700 000 00 00 (демо)</span></li>
+                    <li class="contact-line"><i class="bi bi-envelope" aria-hidden="true"></i><span>hello@jyly.example</span></li>
+                    <li class="contact-line" th:if="${club != null}"><i class="bi bi-clock" aria-hidden="true"></i>
+                        <span th:text="'Күн сайын ' + ${#temporals.format(club.openingTime, 'HH:mm')} + '–' + ${#temporals.format(club.closingTime, 'HH:mm')}">Күн сайын 08:00–22:00</span></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <span th:text="'© ' + (${currentYear} ?: ${#dates.year(#dates.createNow())}) + ' JYLY. Java пәні бойынша оқу жобасы.'">© JYLY</span>
+            <span>Төлемдер демо режимде — нақты ақша есептен шығарылмайды.</span>
+        </div>
+    </div>
+</footer>
+
+<div th:fragment="toasts" class="toasts" aria-live="polite">
+    <div th:if="${toast}" class="toast" th:classappend="${toastType} ?: 'info'" role="status">
+        <i class="bi" aria-hidden="true"
+           th:classappend="${toastType == 'success'} ? 'bi-check-circle-fill' : (${toastType == 'error'} ? 'bi-exclamation-octagon-fill' : 'bi-info-circle-fill')"></i>
+        <span th:text="${toast}">Хабарлама</span>
+        <button type="button" aria-label="Жабу"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
+    </div>
+</div>
+
+<dialog th:fragment="confirm" id="confirm-dialog" class="confirm" aria-labelledby="confirm-title">
+    <div class="confirm-body">
+        <div class="confirm-icon" aria-hidden="true"><i class="bi bi-exclamation-triangle"></i></div>
+        <h2 id="confirm-title" data-confirm-title>Растаңыз</h2>
+        <p data-confirm-text></p>
+    </div>
+    <div class="confirm-actions">
+        <button type="button" class="btn btn-ghost" data-confirm-cancel>Жоқ, қайту</button>
+        <button type="button" class="btn btn-primary" data-confirm-ok>Иә, жалғастыру</button>
+    </div>
+</dialog>
+
+<th:block th:fragment="scripts">
+    <script src="/js/app.js"></script>
+</th:block>
+
+</body>
+</html>

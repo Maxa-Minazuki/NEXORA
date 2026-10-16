@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="kk" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Әкімші · ' + ${customer.fullName})}"></head>
+<body class="admin-body">
+<div class="admin-shell">
+    <th:block th:replace="~{admin/fragments :: sidebar}"></th:block>
+    <main id="main" class="admin-main">
+        <div class="admin-top">
+            <div>
+                <nav class="crumbs" aria-label="Навигация жолы"><a href="/admin/customers">Клиенттер</a><i class="bi bi-chevron-right" aria-hidden="true"></i>
+                    <span th:text="${customer.fullName}">Аты</span></nav>
+                <h1 th:text="${customer.fullName}">Аты</h1>
+                <p th:text="${customer.email} + ' · ' + ${customer.phone} + (${customer.company} != null ? ' · ' + ${customer.company} : '')">Байланыс</p>
+            </div>
+        </div>
+        <div class="table-wrap" th:if="${!bookings.isEmpty()}">
+            <table class="table responsive">
+                <thead><tr><th>Нөмір</th><th>Бөлме</th><th>Уақыты</th><th>Статус</th><th>Төлем</th><th class="num">Жалпы</th><th class="num">Төленді</th></tr></thead>
+                <tbody>
+                <tr th:each="b : ${bookings}">
+                    <td data-label="Нөмір"><a class="row-link mono" th:href="@{/admin/bookings/{id}(id=${b.id})}" th:text="${b.bookingNumber}">JY</a></td>
+                    <td data-label="Бөлме" th:text="${b.room.name}">Room</td>
+                    <td data-label="Уақыты" class="nowrap" th:text="${@fmt.range(b.startDateTime, b.endDateTime)}">Күні</td>
+                    <td data-label="Статус"><span class="badge" th:classappend="${b.status.tone}" th:text="${b.status.label}">S</span></td>
+                    <td data-label="Төлем"><span class="badge" th:classappend="${b.paymentStatus.tone}" th:text="${b.paymentStatus.label}">P</span></td>
+                    <td data-label="Жалпы" class="num" th:text="${@fmt.money(b.totalAmount)}">0</td>
+                    <td data-label="Төленді" class="num" th:text="${@fmt.money(b.amountPaid)}">0</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="empty" th:if="${bookings.isEmpty()}"><h3>Деректер табылмады</h3><p>Бұл клиенттің брондауы жоқ.</p></div>
+    </main>
+</div>
+<div th:replace="~{fragments/layout :: toasts}"></div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

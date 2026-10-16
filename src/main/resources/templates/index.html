@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="kk" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Клуб брондау жүйесі')}"></head>
+<body>
+<div th:replace="~{fragments/layout :: header}"></div>
+
+<main id="main">
+    <!-- Hero -->
+    <section class="hero">
+        <div class="container hero-grid">
+            <div>
+                <span class="eyebrow">Networking клубы · Астана</span>
+                <h1>Маңызды кездесулерге арналған <em>жайлы</em> кеңістік</h1>
+                <p class="hero-lead">Идеялармен бөлісіңіз, жаңа байланыстар орнатыңыз және кездесулеріңізді ерекше атмосферада өткізіңіз.</p>
+                <div class="hero-actions">
+                    <a href="#rooms" class="btn btn-primary">Бөлмені таңдау <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
+                    <a href="#how" class="btn btn-ghost">Қалай жұмыс істейді</a>
+                </div>
+                <div class="hero-stats">
+                    <div><strong th:text="${rooms.size()}">4</strong><span>заманауи бөлме</span></div>
+                    <div><strong th:text="${#temporals.format(club.openingTime, 'HH:mm')} + '–' + ${#temporals.format(club.closingTime, 'HH:mm')}">08:00–22:00</strong><span>күн сайын</span></div>
+                    <div><strong th:text="${club.depositPercent} + '%'">30%</strong><span>ғана депозит</span></div>
+                </div>
+            </div>
+            <div class="hero-visual">
+                <div class="hero-photo">
+                    <img src="/images/hero.jpg" alt="Ағаш үстелі мен үлкен терезелері бар жарық келіссөз бөлмесі" width="1400" height="1120" fetchpriority="high">
+                </div>
+                <div class="float-card availability" role="status">
+                    <div class="float-icon" aria-hidden="true"><i class="bi bi-door-open"></i></div>
+                    <div>
+                        <small><span class="pulse" aria-hidden="true"></span>Дәл қазір бос</small>
+                        <strong th:text="${freeNow} + ' / ' + ${rooms.size()} + ' бөлме'">3 / 4 бөлме</strong>
+                    </div>
+                </div>
+                <div class="float-card club">
+                    <small>JYLY клубы</small>
+                    <strong>Жылы атмосфера, кәсіби деңгей</strong>
+                    <div class="avatars" aria-hidden="true">
+                        <span style="background:#C96F4A">АС</span>
+                        <span style="background:#8A6328">ДН</span>
+                        <span style="background:#48664F">МЕ</span>
+                        <span style="background:#3F4A63">+</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Іздеу -->
+    <section class="container" aria-labelledby="search-title">
+        <h2 id="search-title" class="sr-only">Бос бөлмелерді іздеу</h2>
+        <form class="search-panel" action="/rooms" method="get">
+            <div class="field">
+                <label for="s-date">Күні</label>
+                <input class="input" type="date" id="s-date" name="date" th:value="${criteria.date}" th:min="${today}" th:max="${maxDate}" required>
+            </div>
+            <div class="field">
+                <label for="s-start">Басталу уақыты</label>
+                <select class="select" id="s-start" name="start" required>
+                    <option th:each="t : ${timeSlots}" th:value="${t}" th:text="${t}" th:selected="${t == '10:00'}" th:unless="${tStat.last}">10:00</option>
+                </select>
+            </div>
+            <div class="field">
+                <label for="s-end">Аяқталу уақыты</label>
+                <select class="select" id="s-end" name="end" required>
+                    <option th:each="t : ${timeSlots}" th:value="${t}" th:text="${t}" th:selected="${t == '12:00'}" th:unless="${tStat.first}">12:00</option>
+                </select>
+            </div>
+            <div class="field">
+                <label for="s-guests">Қонақтар саны</label>
+                <input class="input" type="number" id="s-guests" name="guests" min="1" max="200" value="4" required>
+            </div>
+            <button type="submit" class="btn btn-primary"><i class="bi bi-search" aria-hidden="true"></i> Бөлмелерді іздеу</button>
+        </form>
+    </section>
+
+    <!-- Каталог -->
+    <section class="section" id="rooms" aria-labelledby="rooms-title">
+        <div class="container">
+            <div class="section-head">
+                <div>
+                    <span class="eyebrow">Бөлмелер</span>
+                    <h2 class="section-title" id="rooms-title">Әр кездесуге — өз кеңістігі</h2>
+                    <p class="section-lead">Жеке келіссөзден бастап шағын іс-шараға дейін: қажетті форматты таңдап, бірнеше минутта брондаңыз.</p>
+                </div>
+                <a href="/rooms" class="btn btn-ghost">Барлық бөлмелер <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
+            </div>
+            <div class="rooms-grid four" th:if="${!rooms.isEmpty()}">
+                <th:block th:each="room : ${rooms}">
+                    <article th:replace="~{fragments/room-card :: card(${room},
+                        ${busyNow.contains(room.id)} ? 'busy' : 'free',
+                        ${busyNow.contains(room.id)} ? 'Қазір бос емес' : 'Қазір бос',
+                        @{/bookings/new(room=${room.slug})})}"></article>
+                </th:block>
+            </div>
+            <div class="empty" th:if="${rooms.isEmpty()}">
+                <div class="empty-icon" aria-hidden="true"><i class="bi bi-door-closed"></i></div>
+                <h3>Деректер табылмады</h3>
+                <p>Қазір белсенді бөлмелер жоқ. Кейінірек қайта көріңіз.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Артықшылықтар -->
+    <section class="section-sm" aria-labelledby="features-title">
+        <div class="container">
+            <div class="section-head">
+                <div>
+                    <span class="eyebrow">Неге JYLY</span>
+                    <h2 class="section-title" id="features-title">Қонақжайлылық пен технологияның үйлесімі</h2>
+                </div>
+            </div>
+            <div class="features">
+                <div class="feature reveal">
+                    <div class="feature-icon" aria-hidden="true"><i class="bi bi-lightning-charge"></i></div>
+                    <h3>Жылдам брондау</h3>
+                    <p>Бөлмені, күнді және уақытты таңдаңыз — жүйе бос-бостығын бірден тексереді.</p>
+                </div>
+                <div class="feature reveal">
+                    <div class="feature-icon" aria-hidden="true"><i class="bi bi-receipt"></i></div>
+                    <h3>Ашық төлем жүйесі</h3>
+                    <p>Жалпы құн, депозит және қалған төлем алдын ала көрінеді. Жасырын төлемдер жоқ.</p>
+                </div>
+                <div class="feature reveal">
+                    <div class="feature-icon" aria-hidden="true"><i class="bi bi-people"></i></div>
+                    <h3>Қонақтарға ыңғайлы</h3>
+                    <p>Қонақтар тізімін алдын ала қосыңыз — ресепшн оларды есімімен қарсы алады.</p>
+                </div>
+                <div class="feature reveal">
+                    <div class="feature-icon" aria-hidden="true"><i class="bi bi-shield-check"></i></div>
+                    <h3>Сенімді брондау</h3>
+                    <p>Бір бөлмені бір уақытқа екі рет брондау мүмкін емес — мұны сервер кепілдейді.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Қалай жұмыс істейді -->
+    <section class="section how-band" id="how" aria-labelledby="how-title">
+        <div class="container">
+            <div class="section-head">
+                <div>
+                    <span class="eyebrow">Қалай жұмыс істейді</span>
+                    <h2 class="section-title" id="how-title">Үш қадам — және кездесуге дайынсыз</h2>
+                </div>
+                <p class="section-lead" th:text="'Брондау кезінде жалпы соманың ' + ${club.depositPercent} + '% депозиті төленеді, қалғаны — кездесуге дейін.'">Депозит</p>
+            </div>
+            <div class="steps">
+                <div class="step reveal">
+                    <div class="step-num" aria-hidden="true">01</div>
+                    <h3>Бөлмені таңдаңыз</h3>
+                    <p>Қонақтар санына, бағаға және форматқа қарай сүзгілерді қолданып, бос бөлмені табыңыз.</p>
+                </div>
+                <div class="step reveal">
+                    <div class="step-num" aria-hidden="true">02</div>
+                    <h3>Брондауды рәсімдеңіз</h3>
+                    <p>Уақытты, мақсатты және қонақтарды көрсетіңіз. Құн мен депозит бірден есептеледі.</p>
+                </div>
+                <div class="step reveal">
+                    <div class="step-num" aria-hidden="true">03</div>
+                    <h3>Кездесуді бастаңыз</h3>
+                    <p>Депозитті төлегеннен кейін брондау расталады. Келіңіз — бөлме сізді күтіп тұр.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="section">
+        <div class="container">
+            <div class="cta reveal">
+                <div>
+                    <h2>Келесі маңызды кездесуіңізді бүгін жоспарлаңыз</h2>
+                    <p th:text="'Бос уақытты таңдап, бірнеше минутта брондаңыз. Тегін тоқтату — басталуға ' + ${club.freeCancellationHours} + ' сағат қалғанға дейін.'">Бос уақытты таңдап, бірнеше минутта брондаңыз.</p>
+                </div>
+                <div class="cta-actions">
+                    <a href="/bookings/new" class="btn btn-primary">Бөлмені брондау</a>
+                    <a href="/rooms" class="btn btn-ghost">Бөлмелерді көру</a>
+                </div>
+            </div>
+        </div>
+    </section>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<div th:replace="~{fragments/layout :: toasts}"></div>
+<dialog th:replace="~{fragments/layout :: confirm}"></dialog>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

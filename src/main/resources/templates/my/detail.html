@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="kk" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Брондау ' + ${d.booking.bookingNumber})}"></head>
+<body>
+<div th:replace="~{fragments/layout :: header}"></div>
+
+<main id="main" class="container" th:with="b=${d.booking}">
+    <div class="page-head">
+        <nav class="crumbs" aria-label="Навигация жолы">
+            <a href="/">Басты бет</a><i class="bi bi-chevron-right" aria-hidden="true"></i>
+            <a href="/my-bookings">Брондау тарихы</a><i class="bi bi-chevron-right" aria-hidden="true"></i>
+            <span th:text="${b.bookingNumber}">JY</span>
+        </nav>
+        <div class="detail-head" style="margin-top:14px">
+            <div>
+                <span class="booking-number mono"><i class="bi bi-hash" aria-hidden="true"></i><span th:text="${b.bookingNumber}">JY-XXXX-XXXX</span></span>
+                <h1 th:text="${b.room.name}">Connect Room</h1>
+                <div class="row" style="margin-top:10px;gap:8px">
+                    <span class="badge" th:classappend="${b.status.tone}" th:text="${b.status.label}">Күтілуде</span>
+                    <span class="badge" th:classappend="${b.paymentStatus.tone}" th:text="${b.paymentStatus.label}">Төленбеген</span>
+                </div>
+            </div>
+            <div class="actions">
+                <a th:if="${d.canPayDeposit}" th:href="@{/my-bookings/{n}/pay(n=${b.bookingNumber}, type='DEPOSIT')}" class="btn btn-primary">
+                    <i class="bi bi-credit-card" aria-hidden="true"></i> Депозитті төлеу</a>
+                <a th:if="${d.canPayBalance}" th:href="@{/my-bookings/{n}/pay(n=${b.bookingNumber}, type='BALANCE')}" class="btn btn-primary">
+                    <i class="bi bi-credit-card" aria-hidden="true"></i> Қалған төлемді төлеу</a>
+                <a th:if="${d.canEdit}" th:href="@{/my-bookings/{n}/edit(n=${b.bookingNumber})}" class="btn btn-ghost">
+                    <i class="bi bi-pencil" aria-hidden="true"></i> Өңдеу</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="alert alert-warning" th:if="${b.status.name() == 'PENDING' and d.canPayDeposit}" style="margin-bottom:20px">
+        <i class="bi bi-hourglass-split" aria-hidden="true"></i>
+        <div><strong>Брондау депозитті күтуде</strong>
+            <span th:text="'Брондауды растау үшін ' + ${@fmt.money(b.depositAmount.subtract(b.amountPaid))} + ' депозит төлеңіз. Уақыт сізге уақытша бекітілген.'">Депозит</span></div>
+    </div>
+    <div class="alert alert-info" th:if="${b.status.name() == 'CANCELLED'}" style="margin-bottom:20px">
+        <i class="bi bi-info-circle" aria-hidden="true"></i>
+        <div><strong>Брондау тоқтатылған</strong>
+            <span th:text="${@fmt.dateTime(b.cancelledAt)} + ' · ' + ${b.cancellationReason}">Себеп</span></div>
+    </div>
+
+    <div class="layout-aside-right">
+        <div class="stack">
+            <section class="card card-pad" aria-labelledby="info-title">
+                <h2 class="card-title" id="info-title">Кездесу туралы</h2>
+                <div class="kv" style="margin-top:18px">
+                    <div><small>Күні</small><strong th:text="${@fmt.dayLong(b.startDateTime)} + ', ' + ${b.startDateTime.year}">14 қазан</strong></div>
+                    <div><small>Уақыты</small><strong th:text="${@fmt.time(b.startDateTime)} + '–' + ${@fmt.time(b.endDateTime)} + ' (' + ${@fmt.duration(b.durationMinutes)} + ')'">10:00–13:00</strong></div>
+                    <div><small>Қонақтар саны</small><strong th:text="${b.guestCount}">6</strong></div>
+                    <div><small>Мақсаты</small><strong th:text="${b.purpose}">Келіссөз</strong></div>
+                    <div><small>Ұйымдастырушы</small><strong th:text="${b.customer.fullName}">Аты-жөні</strong></div>
+                    <div><small>Байланыс</small><strong th:text="${b.customer.email}">email</strong></div>
+                    <div th:if="${b.notes}" style="grid-column:1/-1"><small>Қосымша тілектер</small><strong th:text="${b.notes}">Ескертпе</strong></div>
+                </div>
+            </section>
+
+            <section class="card card-pad" aria-labelledby="guests-title">
+                <h2 class="card-title" id="guests-title">Қонақтар <span class="badge" th:text="${d.guests.size()}">2</span></h2>
+                <div class="stack-sm" style="margin-top:16px" th:if="${!d.guests.isEmpty()}">
+                    <div class="person" th:each="g : ${d.guests}">
+                        <span class="avatar" th:text="${@fmt.initials(g.firstName, g.lastName)}">АТ</span>
+                        <div><strong th:text="${g.fullName}">Аты-жөні</strong>
+                            <small th:text="${#strings.defaultString(g.company, '') + (g.company != null and g.email != null ? ' · ' : '') + #strings.defaultString(g.email, '')}">Компания</small></div>
+                    </div>
+                </div>
+                <p class="muted" style="margin-top:12px" th:if="${d.guests.isEmpty()}">Қонақтар тізімі көрсетілмеген.</p>
+            </section>
+
+            <section class="card card-pad" aria-labelledby="pay-title">
+                <div class="row between">
+                    <h2 class="card-title" id="pay-title">Төлем тарихы</h2>
+                    <span class="badge demo">Демо режим</span>
+                </div>
+                <div class="table-wrap" style="margin-top:16px" th:if="${!d.payments.isEmpty()}">
+                    <table class="table responsive">
+                        <thead><tr><th>Күні</th><th>Түрі</th><th>Нөмір</th><th>Статус</th><th class="num">Сома</th></tr></thead>
+                        <tbody>
+                        <tr th:each="p : ${d.payments}">
+                            <td data-label="Күні" th:text="${@fmt.dateTime(p.createdAt)}">14 қазан</td>
+                            <td data-label="Түрі" th:text="${p.paymentType.label}">Депозит</td>
+                            <td data-label="Нөмір" class="mono small" th:text="${p.transactionReference}">DEMO</td>
+                            <td data-label="Статус"><span class="badge" th:classappend="${p.status.tone}" th:text="${p.status.label}">Сәтті</span></td>
+                            <td data-label="Сома" class="num" th:text="${(p.paymentType.name() == 'REFUND' ? '−' : '') + @fmt.money(p.amount)}">10 800 ₸</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p class="muted" style="margin-top:12px" th:if="${d.payments.isEmpty()}">Әзірге төлем жасалмаған.</p>
+                <p class="tiny muted" style="margin-top:12px">Сәтсіз операциялар тарихта сақталады, бірақ төленген сомаға қосылмайды.</p>
+            </section>
+        </div>
+
+        <aside class="stack sticky">
+            <section class="card card-pad" aria-labelledby="money-title">
+                <h2 class="card-title" id="money-title">Есеп</h2>
+                <div class="summary-row" style="margin-top:12px"><span>Сағаттық баға</span><strong th:text="${@fmt.money(b.hourlyRate)}">12 000 ₸</strong></div>
+                <div class="summary-row"><span>Төленетін сағаттар</span><strong th:text="${b.billableHours} + ' сағ'">3</strong></div>
+                <div class="summary-row total"><span>Жалпы құны</span><strong th:text="${@fmt.money(b.totalAmount)}">36 000 ₸</strong></div>
+                <div class="progress" style="margin:10px 0 4px" role="progressbar" aria-label="Төлем барысы"
+                     th:with="pct=${@fmt.percent(b.amountPaid, b.totalAmount)}"
+                     th:attr="aria-valuenow=${pct}" aria-valuemin="0" aria-valuemax="100">
+                    <span th:style="'width:' + ${pct} + '%'"></span>
+                </div>
+                <div class="money-grid" style="grid-template-columns:1fr">
+                    <div class="money"><small th:text="'Депозит (' + ${club.depositPercent} + '%)'">Депозит</small><strong th:text="${@fmt.money(b.depositAmount)}">10 800 ₸</strong></div>
+                    <div class="money"><small>Төленді (таза)</small><strong th:text="${@fmt.money(b.amountPaid)}">10 800 ₸</strong></div>
+                    <div class="money accent"><small>Қалған төлем</small><strong th:text="${b.status.name() == 'CANCELLED'} ? '—' : ${@fmt.money(b.remainingAmount)}">25 200 ₸</strong></div>
+                </div>
+            </section>
+
+            <section class="card card-pad" th:if="${d.canCancel}" aria-labelledby="cancel-title">
+                <h2 class="card-title" id="cancel-title">Брондауды тоқтату</h2>
+                <p class="card-sub" th:if="${d.freeCancellation}" th:text="'Басталуға ' + ${club.freeCancellationHours} + ' сағаттан көп уақыт бар — төленген соманың бәрі қайтарылады.'">Тегін</p>
+                <p class="card-sub" th:unless="${d.freeCancellation}" th:text="'Басталуға ' + ${club.freeCancellationHours} + ' сағаттан аз қалды — депозит қайтарылмайды.'">Кеш</p>
+                <p class="small" style="margin-bottom:14px">Қайтарылатын сома (демо): <strong th:text="${@fmt.money(d.refundIfCancelledNow)}">0 ₸</strong></p>
+                <form th:action="@{/my-bookings/{n}/cancel(n=${b.bookingNumber})}" method="post"
+                      data-confirm="Брондау тоқтатылады. Бұл әрекетті болдырмау мүмкін емес."
+                      data-confirm-title="Брондауды тоқтату керек пе?" data-confirm-ok="Иә, тоқтату">
+                    <span hidden data-confirm-extra th:text="'Қайтарылатын сома (демо): ' + ${@fmt.money(d.refundIfCancelledNow)} + '.'"></span>
+                    <button type="submit" class="btn btn-danger btn-block"><i class="bi bi-x-circle" aria-hidden="true"></i> Брондауды тоқтату</button>
+                </form>
+            </section>
+        </aside>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<div th:replace="~{fragments/layout :: toasts}"></div>
+<dialog th:replace="~{fragments/layout :: confirm}"></dialog>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

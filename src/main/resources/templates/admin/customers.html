@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="kk" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Әкімші · Клиенттер')}"></head>
+<body class="admin-body">
+<div class="admin-shell">
+    <th:block th:replace="~{admin/fragments :: sidebar}"></th:block>
+    <main id="main" class="admin-main">
+        <div class="admin-top">
+            <div><h1>Клиенттер</h1><p>Брондау жасаған ұйымдастырушылар.</p></div>
+        </div>
+        <form class="toolbar" action="/admin/customers" method="get" role="search">
+            <div class="field grow">
+                <label for="q">Іздеу</label>
+                <input class="input" type="search" id="q" name="q" th:value="${q}" placeholder="Аты, пошта, телефон, компания">
+            </div>
+            <button type="submit" class="btn btn-dark"><i class="bi bi-search" aria-hidden="true"></i> Іздеу</button>
+            <a href="/admin/customers" class="btn btn-ghost">Тазалау</a>
+        </form>
+        <div class="table-wrap" th:if="${!customers.isEmpty()}">
+            <table class="table responsive">
+                <thead><tr><th>Клиент</th><th>Байланыс</th><th>Компания</th><th class="num">Брондаулар</th><th class="num">Төлеген (таза)</th></tr></thead>
+                <tbody>
+                <tr th:each="c : ${customers}">
+                    <td data-label="Клиент">
+                        <div class="person">
+                            <span class="avatar" th:text="${@fmt.initials(c.firstName, c.lastName)}">АС</span>
+                            <a class="row-link" th:href="@{/admin/customers/{id}(id=${c.id})}" th:text="${c.firstName} + ' ' + ${c.lastName}">Аты</a>
+                        </div>
+                    </td>
+                    <td data-label="Байланыс"><span th:text="${c.email}">email</span><br><small class="muted" th:text="${c.phone}">тел</small></td>
+                    <td data-label="Компания" th:text="${c.company} ?: '—'">—</td>
+                    <td data-label="Брондаулар" class="num" th:text="${c.bookingCount}">0</td>
+                    <td data-label="Төлеген" class="num" th:text="${@fmt.money(c.totalPaid)}">0</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="empty" th:if="${customers.isEmpty()}"><h3>Деректер табылмады</h3><p>Іздеу шартын өзгертіп көріңіз.</p></div>
+    </main>
+</div>
+<div th:replace="~{fragments/layout :: toasts}"></div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

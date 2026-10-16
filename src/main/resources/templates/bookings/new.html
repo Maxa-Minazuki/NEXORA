@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="kk" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Бөлмені брондау')}"></head>
+<body>
+<div th:replace="~{fragments/layout :: header}"></div>
+
+<main id="main" class="container">
+    <div class="page-head">
+        <nav class="crumbs" aria-label="Навигация жолы">
+            <a href="/">Басты бет</a><i class="bi bi-chevron-right" aria-hidden="true"></i>
+            <a href="/rooms">Бөлмелер</a><i class="bi bi-chevron-right" aria-hidden="true"></i><span>Брондау</span>
+        </nav>
+        <h1>Бөлмені брондау</h1>
+        <p>Деректерді толтырыңыз — құн мен депозит бірден есептеледі. Соңғы тексеруді және соңғы бағаны сервер жасайды.</p>
+    </div>
+
+    <div class="empty" th:if="${rooms.isEmpty()}">
+        <div class="empty-icon" aria-hidden="true"><i class="bi bi-door-closed"></i></div>
+        <h3>Брондауға қолжетімді бөлме жоқ</h3>
+        <p>Кейінірек қайта көріңіз.</p>
+        <a href="/" class="btn btn-soft">Басты бетке</a>
+    </div>
+
+    <form th:unless="${rooms.isEmpty()}" id="booking-form" th:action="@{/bookings}" th:object="${bookingForm}" method="post" class="layout-aside-right">
+        <div class="stack">
+            <div class="alert alert-danger" th:if="${#fields.hasGlobalErrors()}" role="alert">
+                <i class="bi bi-exclamation-octagon" aria-hidden="true"></i>
+                <div>
+                    <strong th:each="e : ${#fields.globalErrors()}" th:text="${e}">Қате</strong>
+                    <div th:if="${alternatives != null}">
+                        <p th:if="${!alternatives.isEmpty()}" style="margin:8px 0">Сол күнгі бос уақыттар (бір басумен таңдаңыз):</p>
+                        <p th:if="${alternatives.isEmpty()}" style="margin-top:6px">Бұл күні осы ұзақтыққа бос уақыт қалмады. Басқа күнді немесе бөлмені таңдаңыз.</p>
+                        <div class="slot-list">
+                            <button type="button" class="slot free" th:each="t : ${alternatives}"
+                                    th:attr="data-suggest-start=${#temporals.format(t, 'HH:mm')},data-suggest-end=${#temporals.format(t.plusMinutes(conflictDuration), 'HH:mm')}"
+                                    th:text="${#temporals.format(t, 'HH:mm')} + '–' + ${#temporals.format(t.plusMinutes(conflictDuration), 'HH:mm')}">14:00–16:00</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="alert alert-warning" th:if="${#fields.hasErrors('*') and !#fields.hasGlobalErrors()}" role="alert">
+                <i class="bi bi-exclamation-triangle" aria-hidden="true"></i>
+                <span>Кейбір өрістер қате толтырылған. Төменде белгіленген жерлерді тексеріңіз.</span>
+            </div>
+
+            <!-- 1. Бөлме -->
+            <section class="card card-pad form-section" aria-labelledby="sec-room">
+                <h2 class="card-title" id="sec-room"><span class="num">1</span> Бөлме</h2>
+                <p class="card-sub">Кездесу форматына сай бөлмені таңдаңыз.</p>
+                <fieldset style="border:0;padding:0;margin:0">
+                    <legend class="sr-only">Бөлмені таңдау</legend>
+                    <div class="room-picker">
+                        <label class="room-option" th:each="r : ${rooms}">
+                            <input type="radio" th:field="*{roomId}" th:value="${r.id}" required
+                                   th:data-name="${r.name}"
+                                   th:data-capacity="${r.capacity}" th:data-equipment="${#strings.listJoin(r.equipment, '|')}">
+                            <span class="ro">
+                                <img th:src="${r.imageUrl}" alt="" width="64" height="56">
+                                <span>
+                                    <strong th:text="${r.name}">Connect Room</strong>
+                                    <span hidden data-rate-label th:text="${@fmt.money(r.hourlyRate)} + ' / сағ'">12 000 ₸ / сағ</span>
+                                    <small th:text="${@fmt.money(r.hourlyRate)} + '/сағ · ' + ${r.capacity} + ' адам'">12 000 ₸/сағ</small>
+                                </span>
+                            </span>
+                        </label>
+                    </div>
+                </fieldset>
+                <p class="field-error" th:if="${#fields.hasErrors('roomId')}" th:errors="*{roomId}" style="margin-top:10px">Қате</p>
+                <div style="margin-top:16px">
+                    <span class="label">Жабдықтар</span>
+                    <div class="chips" id="room-equipment" style="margin-top:8px"></div>
+                </div>
+            </section>
+
+            <!-- 2. Брондау -->
+            <section class="card card-pad form-section" aria-labelledby="sec-time">
+                <h2 class="card-title" id="sec-time"><span class="num">2</span> Күні мен уақыты</h2>
+                <p class="card-sub" th:text="'Клуб ' + ${#temporals.format(club.openingTime, 'HH:mm')} + '–' + ${#temporals.format(club.closingTime, 'HH:mm')} + ' аралығында жұмыс істейді. Уақыт ' + ${club.slotMinutes} + ' минуттық қадаммен таңдалады.'">Ереже</p>
+                <div class="form-grid-3">
+                    <div class="field" th:classappend="${#fields.hasErrors('date')} ? 'has-error'">
+                        <label for="date">Күні</label>
+                        <input class="input" type="date" th:field="*{date}" th:min="${today}" th:max="${maxDate}" required>
+                        <p class="field-error" th:if="${#fields.hasErrors('date')}" th:errors="*{date}">Қате</p>
+                    </div>
+                    <div class="field" th:classappend="${#fields.hasErrors('startTime')} ? 'has-error'">
+                        <label for="startTime">Басталу уақыты</label>
+                        <select class="select" th:field="*{startTime}" required>
+                            <option th:each="t : ${timeSlots}" th:value="${t}" th:text="${t}" th:unless="${tStat.last}">10:00</option>
+                        </select>
+                        <p class="field-error" th:if="${#fields.hasErrors('startTime')}" th:errors="*{startTime}">Қате</p>
+                    </div>
+                    <div class="field" th:classappend="${#fields.hasErrors('endTime')} ? 'has-error'">
+                        <label for="endTime">Аяқталу уақыты</label>
+                        <select class="select" th:field="*{endTime}" required>
+                            <option th:each="t : ${timeSlots}" th:value="${t}" th:text="${t}" th:unless="${tStat.first}">12:00</option>
+                        </select>
+                        <p class="field-error" th:if="${#fields.hasErrors('endTime')}" th:errors="*{endTime}">Қате</p>
+                    </div>
+                </div>
+
+                <div style="margin-top:18px">
+                    <span class="label">Бөлменің осы күнгі кестесі</span>
+                    <div class="timeline" id="timeline" style="margin-top:8px" aria-hidden="true"
+                         th:attr="data-open=${#temporals.format(club.openingTime, 'HH:mm')},data-close=${#temporals.format(club.closingTime, 'HH:mm')}"></div>
+                    <div class="timeline-scale" aria-hidden="true">
+                        <span th:text="${#temporals.format(club.openingTime, 'HH:mm')}">08:00</span><span>12:00</span><span>16:00</span>
+                        <span th:text="${#temporals.format(club.closingTime, 'HH:mm')}">22:00</span>
+                    </div>
+                    <div class="row" style="margin-top:10px;align-items:flex-start">
+                        <span class="small muted">Бос емес:</span>
+                        <div class="slot-list" id="busy-list" aria-live="polite"></div>
+                    </div>
+                </div>
+
+                <div class="form-grid" style="margin-top:18px">
+                    <div class="field" th:classappend="${#fields.hasErrors('guestCount')} ? 'has-error'">
+                        <label for="guestCount">Қонақтар саны</label>
+                        <input class="input" type="number" th:field="*{guestCount}" min="1" max="200" required>
+                        <span class="hint" id="capacity-hint">Бөлме сыйымдылығынан аспауы керек</span>
+                        <p class="field-error" th:if="${#fields.hasErrors('guestCount')}" th:errors="*{guestCount}">Қате</p>
+                    </div>
+                    <div class="field" th:classappend="${#fields.hasErrors('purpose')} ? 'has-error'">
+                        <label for="purpose">Кездесу мақсаты</label>
+                        <input class="input" type="text" th:field="*{purpose}" list="purpose-options" maxlength="120" required placeholder="Мысалы, серіктестермен келіссөз">
+                        <datalist id="purpose-options">
+                            <option value="Networking кездесуі"></option>
+                            <option value="Іскерлік келіссөздер"></option>
+                            <option value="Презентация"></option>
+                            <option value="Командалық жұмыс"></option>
+                            <option value="Сұхбат"></option>
+                            <option value="Воркшоп"></option>
+                        </datalist>
+                        <p class="field-error" th:if="${#fields.hasErrors('purpose')}" th:errors="*{purpose}">Қате</p>
+                    </div>
+                    <div class="field span-2" th:classappend="${#fields.hasErrors('notes')} ? 'has-error'">
+                        <label for="notes">Қосымша тілектер <span class="muted">(міндетті емес)</span></label>
+                        <textarea class="textarea" th:field="*{notes}" maxlength="1000" placeholder="Кофе-брейк, жиһаз орналасуы, техникалық сұраулар…"></textarea>
+                        <p class="field-error" th:if="${#fields.hasErrors('notes')}" th:errors="*{notes}">Қате</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 3. Ұйымдастырушы -->
+            <section class="card card-pad form-section" aria-labelledby="sec-org">
+                <h2 class="card-title" id="sec-org"><span class="num">3</span> Ұйымдастырушы</h2>
+                <p class="card-sub">Брондауды кейін табу үшін электрондық пошта мен брондау нөмірі қажет болады.</p>
+                <div class="form-grid">
+                    <div class="field" th:classappend="${#fields.hasErrors('firstName')} ? 'has-error'">
+                        <label for="firstName">Аты</label>
+                        <input class="input" type="text" th:field="*{firstName}" maxlength="60" autocomplete="given-name" required>
+                        <p class="field-error" th:if="${#fields.hasErrors('firstName')}" th:errors="*{firstName}">Қате</p>
+                    </div>
+                    <div class="field" th:classappend="${#fields.hasErrors('lastName')} ? 'has-error'">
+                        <label for="lastName">Тегі</label>
+                        <input class="input" type="text" th:field="*{lastName}" maxlength="60" autocomplete="family-name" required>
+                        <p class="field-error" th:if="${#fields.hasErrors('lastName')}" th:errors="*{lastName}">Қате</p>
+                    </div>
+                    <div class="field" th:classappend="${#fields.hasErrors('phone')} ? 'has-error'">
+                        <label for="phone">Телефон</label>
+                        <input class="input" type="tel" th:field="*{phone}" maxlength="20" autocomplete="tel" placeholder="+7 701 123 45 67" required>
+                        <p class="field-error" th:if="${#fields.hasErrors('phone')}" th:errors="*{phone}">Қате</p>
+                    </div>
+                    <div class="field" th:classappend="${#fields.hasErrors('email')} ? 'has-error'">
+                        <label for="email">Электрондық пошта</label>
+                        <input class="input" type="email" th:field="*{email}" maxlength="120" autocomplete="email" placeholder="name@example.kz" required>
+                        <p class="field-error" th:if="${#fields.hasErrors('email')}" th:errors="*{email}">Қате</p>
+                    </div>
+                    <div class="field span-2" th:classappend="${#fields.hasErrors('company')} ? 'has-error'">
+                        <label for="company">Компания <span class="muted">(міндетті емес)</span></label>
+                        <input class="input" type="text" th:field="*{company}" maxlength="120" autocomplete="organization">
+                        <p class="field-error" th:if="${#fields.hasErrors('company')}" th:errors="*{company}">Қате</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 4. Қонақтар -->
+            <section class="card card-pad form-section" aria-labelledby="sec-guests">
+                <div class="row between">
+                    <h2 class="card-title" id="sec-guests"><span class="num">4</span> Қонақтар <span class="badge" id="guest-counter" th:text="${bookingForm.guests.size()}">0</span></h2>
+                    <button type="button" class="btn btn-soft btn-sm" id="add-guest"><i class="bi bi-person-plus" aria-hidden="true"></i> Қонақтарды қосу</button>
+                </div>
+                <p class="card-sub">Міндетті емес. Ресепшн қонақтарды есімімен қарсы алады. Электрондық пошта мен компания — қаласаңыз.</p>
+
+                <div class="guest-list" id="guest-list">
+                    <div class="guest-row" th:each="g, st : *{guests}">
+                        <span class="guest-index" th:text="${st.count}">1</span>
+                        <div class="field" th:classappend="${#fields.hasErrors('guests[__${st.index}__].firstName')} ? 'has-error'">
+                            <label th:for="|guests${st.index}.firstName|">Аты</label>
+                            <input class="input" type="text" data-field="firstName" th:field="*{guests[__${st.index}__].firstName}" maxlength="60">
+                            <p class="field-error" th:if="${#fields.hasErrors('guests[__${st.index}__].firstName')}" th:errors="*{guests[__${st.index}__].firstName}">Қате</p>
+                        </div>
+                        <div class="field" th:classappend="${#fields.hasErrors('guests[__${st.index}__].lastName')} ? 'has-error'">
+                            <label th:for="|guests${st.index}.lastName|">Тегі</label>
+                            <input class="input" type="text" data-field="lastName" th:field="*{guests[__${st.index}__].lastName}" maxlength="60">
+                        </div>
+                        <div class="field" th:classappend="${#fields.hasErrors('guests[__${st.index}__].email')} ? 'has-error'">
+                            <label th:for="|guests${st.index}.email|">Электрондық пошта</label>
+                            <input class="input" type="email" data-field="email" th:field="*{guests[__${st.index}__].email}" maxlength="120">
+                            <p class="field-error" th:if="${#fields.hasErrors('guests[__${st.index}__].email')}" th:errors="*{guests[__${st.index}__].email}">Қате</p>
+                        </div>
+                        <div class="field">
+                            <label th:for="|guests${st.index}.company|">Компания</label>
+                            <input class="input" type="text" data-field="company" th:field="*{guests[__${st.index}__].company}" maxlength="120">
+                        </div>
+                        <button type="button" class="icon-btn" data-remove-guest aria-label="Қонақты жою"><i class="bi bi-trash3" aria-hidden="true"></i></button>
+                    </div>
+                </div>
+                <p class="muted small" id="guest-empty" th:hidden="${!bookingForm.guests.isEmpty()}">Әзірге қонақ қосылмаған.</p>
+            </section>
+        </div>
+
+        <!-- Есеп -->
+        <aside class="sticky">
+            <div class="card summary" id="summary" aria-live="polite">
+                <div class="summary-head">
+                    <small>Таңдалған бөлме</small>
+                    <strong data-q="room">—</strong>
+                    <small data-q="capacity"></small>
+                </div>
+                <div class="summary-body">
+                    <div class="summary-row"><span>Сағаттық баға</span><strong data-q="rate">—</strong></div>
+                    <div class="summary-row"><span>Брондау ұзақтығы</span><strong data-q="duration">—</strong></div>
+                    <div class="summary-row total"><span>Жалпы құны</span><strong data-q="total">—</strong></div>
+                    <div class="summary-highlight">
+                        <div class="summary-row"><span th:text="'Депозит мөлшері (' + ${club.depositPercent} + '%)'">Депозит мөлшері</span><strong data-q="deposit">—</strong></div>
+                        <div class="summary-row"><span>Қазір төленетін сома</span><strong data-q="now">—</strong></div>
+                        <div class="summary-row"><span>Қалған төлем</span><strong data-q="balance">—</strong></div>
+                    </div>
+                    <div class="quote-status" id="quote-status"></div>
+                    <button type="submit" class="btn btn-primary btn-block" id="submit-booking" style="margin-top:16px">
+                        <i class="bi bi-calendar-check" aria-hidden="true"></i> Брондауды растау
+                    </button>
+                    <p class="summary-note"><i class="bi bi-info-circle" aria-hidden="true"></i>
+                        <span>Әр басталған сағат толық есептеледі. Депозит брондау жасалғаннан кейін «Брондау тарихы» бөлімінде демо режимде төленеді.</span></p>
+                </div>
+            </div>
+        </aside>
+    </form>
+</main>
+
+<template id="guest-template">
+    <div class="guest-row">
+        <span class="guest-index">1</span>
+        <div class="field"><label>Аты</label><input class="input" type="text" data-field="firstName" maxlength="60" required></div>
+        <div class="field"><label>Тегі</label><input class="input" type="text" data-field="lastName" maxlength="60" required></div>
+        <div class="field"><label>Электрондық пошта</label><input class="input" type="email" data-field="email" maxlength="120"></div>
+        <div class="field"><label>Компания</label><input class="input" type="text" data-field="company" maxlength="120"></div>
+        <button type="button" class="icon-btn" data-remove-guest aria-label="Қонақты жою"><i class="bi bi-trash3" aria-hidden="true"></i></button>
+    </div>
+</template>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<div th:replace="~{fragments/layout :: toasts}"></div>
+<dialog th:replace="~{fragments/layout :: confirm}"></dialog>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+<script src="/js/booking.js"></script>
+</body>
+</html>

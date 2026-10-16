@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="kk" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(${status == 404} ? 'Бет табылмады' : 'Қате')}"></head>
+<body>
+<div th:replace="~{fragments/layout :: header}"></div>
+
+<main id="main" class="container error-page">
+    <div class="error-code" th:text="${status} ?: 'Қате'">404</div>
+    <h1 style="font-size:30px;margin-top:16px"
+        th:text="${title} ?: (${status == 404} ? 'Бет табылмады' : (${status == 403} ? 'Қолжетімділік жоқ' : 'Бірдеңе дұрыс болмады'))">Бет табылмады</h1>
+    <p class="muted" style="margin:12px auto 28px;max-width:480px"
+       th:text="${message != null and title != null} ? ${message} : (${status == 404} ? 'Сұралған бет немесе жазба табылмады.' : (${status == 403} ? 'Бұл әрекетке рұқсатыңыз жоқ.' : 'Сервер сұрауды өңдей алмады. Қайта көріңіз.'))">Сипаттама</p>
+    <div class="actions" style="justify-content:center">
+        <a href="/" class="btn btn-primary">Басты бетке</a>
+        <a href="/rooms" class="btn btn-ghost">Бөлмелер</a>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

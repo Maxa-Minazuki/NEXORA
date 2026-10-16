@@ -1,0 +1,42 @@
+target/
+data/
+*.log
+.idea/
+*.iml
+.vscode/*
+!.vscode/launch.json
+!.vscode/settings.json
+# Жергілікті құпиялар
+.env
+application-secrets.properties
+server.pid
+
+# Құпиялар мен кілттер
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+*.keystore
+credentials*.json
+secrets*.properties
+
+# Дерекқор файлдары, логтар, құрастыру нәтижелері
+*.mv.db
+*.trace.db
+*.db
+logs/
+out/
+build/
+bin/
+
+# ОЖ және Office уақытша файлдары
+.DS_Store
+Thumbs.db
+desktop.ini
+~$*
+
+# Жоба құжаттары (жариялауға арналмаған)
+*.docx

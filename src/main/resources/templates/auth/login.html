@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="kk" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Кіру')}"></head>
+<body>
+<div th:replace="~{fragments/layout :: header}"></div>
+
+<main id="main" class="auth-wrap">
+    <div class="auth-card">
+        <form class="card card-pad stack" th:action="@{/login}" method="post" aria-labelledby="login-title">
+            <div>
+                <span class="brand-mark" aria-hidden="true" style="margin-bottom:16px"><i class="bi bi-shield-lock"></i></span>
+                <h1 id="login-title" style="font-size:28px">Әкімші панеліне кіру</h1>
+                <p class="muted" style="margin-top:6px">Бұл бөлім клуб қызметкерлеріне арналған. Клиенттерге тіркелу қажет емес —
+                    брондауды <a class="link" href="/my-bookings">нөмірі арқылы табыңыз</a>.</p>
+            </div>
+
+            <div class="alert alert-danger" th:if="${param.error}" role="alert">
+                <i class="bi bi-exclamation-octagon" aria-hidden="true"></i>
+                <span>Пайдаланушы аты немесе құпиясөз қате. Қайта көріңіз.</span>
+            </div>
+            <div class="alert alert-success" th:if="${param.logout}" role="status">
+                <i class="bi bi-check-circle" aria-hidden="true"></i>
+                <span>Жүйеден шықтыңыз.</span>
+            </div>
+
+            <div class="field">
+                <label for="username">Пайдаланушы аты</label>
+                <input class="input" type="text" id="username" name="username" autocomplete="username" required autofocus>
+            </div>
+            <div class="field">
+                <label for="password">Құпиясөз</label>
+                <input class="input" type="password" id="password" name="password" autocomplete="current-password" required>
+            </div>
+            <button type="submit" class="btn btn-dark btn-block">Кіру</button>
+        </form>
+    </div>
+</main>
+
+<div th:replace="~{fragments/layout :: toasts}"></div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

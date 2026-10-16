@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="kk" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Демо төлем')}"></head>
+<body>
+<div th:replace="~{fragments/layout :: header}"></div>
+
+<main id="main" class="container" th:with="b=${d.booking}">
+    <div class="page-head">
+        <nav class="crumbs" aria-label="Навигация жолы">
+            <a href="/">Басты бет</a><i class="bi bi-chevron-right" aria-hidden="true"></i>
+            <a href="/my-bookings">Брондау тарихы</a><i class="bi bi-chevron-right" aria-hidden="true"></i>
+            <a th:href="@{/my-bookings/{n}(n=${b.bookingNumber})}" th:text="${b.bookingNumber}">JY</a><i class="bi bi-chevron-right" aria-hidden="true"></i>
+            <span>Төлем</span>
+        </nav>
+        <h1 th:text="${paymentForm.type.name() == 'DEPOSIT'} ? 'Депозитті төлеу' : 'Қалған төлемді төлеу'">Депозитті төлеу</h1>
+    </div>
+
+    <div class="layout-aside-right">
+        <form class="card card-pad stack" th:action="@{/my-bookings/{n}/pay(n=${b.bookingNumber})}" th:object="${paymentForm}" method="post">
+            <div class="demo-banner" role="note">
+                <i class="bi bi-shield-exclamation" aria-hidden="true"></i>
+                <div><strong>Демо режим.</strong> Бұл оқу жобасы: банк эквайрингі қосылмаған, карта деректері сұралмайды және
+                    <strong>нақты ақша есептен шығарылмайды</strong>. Операция тек жүйеде демо төлем ретінде тіркеледі.</div>
+            </div>
+
+            <div class="alert alert-danger" th:if="${#fields.hasErrors('*')}" role="alert">
+                <i class="bi bi-exclamation-octagon" aria-hidden="true"></i>
+                <div><strong th:each="e : ${#fields.allErrors()}" th:text="${e}">Қате</strong></div>
+            </div>
+
+            <input type="hidden" th:field="*{type}">
+            <input type="hidden" th:field="*{idempotencyKey}">
+
+            <div class="field" th:if="${paymentForm.type.name() == 'DEPOSIT'}">
+                <span class="label">Депозит сомасы</span>
+                <div class="money accent"><small th:text="'Жалпы соманың ' + ${club.depositPercent} + '%'">30%</small>
+                    <strong th:text="${@fmt.money(b.depositAmount.subtract(b.amountPaid))}">10 800 ₸</strong></div>
+                <span class="hint">Депозит сомасын сервер есептейді. Төленгеннен кейін брондау расталады.</span>
+            </div>
+
+            <div class="field" th:if="${paymentForm.type.name() == 'BALANCE'}" th:classappend="${#fields.hasErrors('amount')} ? 'has-error'">
+                <label for="amount">Төлем сомасы, ₸</label>
+                <input class="input" type="number" id="amount" name="amount" min="1" step="1"
+                       th:max="${@fmt.plain(b.remainingAmount)}" th:value="${@fmt.plain(paymentForm.amount)}" required>
+                <span class="hint" th:text="'Ең көбі ' + ${@fmt.money(b.remainingAmount)} + '. Бір бөлігін де төлей аласыз.'">Ең көбі</span>
+            </div>
+
+            <fieldset style="border:0;padding:0;margin:0">
+                <legend class="label" style="margin-bottom:8px">Демо нәтижесі</legend>
+                <div class="radio-cards">
+                    <label class="radio-card">
+                        <input type="radio" th:field="*{outcome}" value="SUCCESS">
+                        <span><i class="bi bi-check-circle" aria-hidden="true"></i> Сәтті төлемді имитациялау</span>
+                    </label>
+                    <label class="radio-card">
+                        <input type="radio" th:field="*{outcome}" value="FAILURE">
+                        <span><i class="bi bi-x-octagon" aria-hidden="true"></i> Сәтсіз төлемді имитациялау</span>
+                    </label>
+                </div>
+                <p class="hint tiny muted" style="margin-top:8px">Сәтсіз операция тарихта сақталады, бірақ төленген сомаға қосылмайды.</p>
+            </fieldset>
+
+            <label class="check">
+                <input type="checkbox" th:field="*{acknowledgeDemo}" required>
+                <span>Бұл демо төлем екенін және нақты ақша есептен шығарылмайтынын түсінемін.</span>
+            </label>
+
+            <div class="actions">
+                <button type="submit" class="btn btn-primary"><i class="bi bi-lock" aria-hidden="true"></i> Демо төлемді растау</button>
+                <a th:href="@{/my-bookings/{n}(n=${b.bookingNumber})}" class="btn btn-ghost">Болдырмау</a>
+            </div>
+        </form>
+
+        <aside class="card card-pad sticky">
+            <h2 class="card-title"><span th:text="${b.room.name}">Room</span></h2>
+            <p class="card-sub" th:text="${@fmt.range(b.startDateTime, b.endDateTime)}">Күні</p>
+            <div class="summary-row"><span>Жалпы құны</span><strong th:text="${@fmt.money(b.totalAmount)}">36 000 ₸</strong></div>
+            <div class="summary-row"><span>Депозит</span><strong th:text="${@fmt.money(b.depositAmount)}">10 800 ₸</strong></div>
+            <div class="summary-row"><span>Төленді</span><strong th:text="${@fmt.money(b.amountPaid)}">0 ₸</strong></div>
+            <div class="summary-row total"><span>Қалған төлем</span><strong th:text="${@fmt.money(b.remainingAmount)}">36 000 ₸</strong></div>
+        </aside>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<div th:replace="~{fragments/layout :: toasts}"></div>
+<dialog th:replace="~{fragments/layout :: confirm}"></dialog>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

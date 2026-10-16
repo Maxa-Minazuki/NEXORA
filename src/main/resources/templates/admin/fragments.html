@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="kk" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<body>
+<th:block th:fragment="sidebar">
+    <div class="admin-mobile-bar">
+        <a href="/admin" class="brand" style="color:#fff"><span class="brand-mark" aria-hidden="true"><i class="bi bi-cup-hot"></i></span>JYLY</a>
+        <button class="nav-toggle" type="button" data-admin-toggle aria-controls="admin-side" aria-expanded="false" aria-label="Мәзірді ашу">
+            <i class="bi bi-list" aria-hidden="true"></i>
+        </button>
+    </div>
+    <aside class="admin-side" id="admin-side" aria-label="Әкімші мәзірі">
+        <a href="/admin" class="brand">
+            <span class="brand-mark" aria-hidden="true"><i class="bi bi-cup-hot"></i></span>
+            <span>JYLY<small>ӘКІМШІ ПАНЕЛІ</small></span>
+        </a>
+        <nav class="admin-nav">
+            <a href="/admin" th:classappend="${section == 'dashboard'} ? 'is-active'"><i class="bi bi-grid-1x2" aria-hidden="true"></i> Шолу</a>
+            <a href="/admin/bookings" th:classappend="${section == 'bookings'} ? 'is-active'"><i class="bi bi-calendar-week" aria-hidden="true"></i> Брондаулар</a>
+            <a href="/admin/rooms" th:classappend="${section == 'rooms'} ? 'is-active'"><i class="bi bi-door-open" aria-hidden="true"></i> Бөлмелер</a>
+            <a href="/admin/customers" th:classappend="${section == 'customers'} ? 'is-active'"><i class="bi bi-people" aria-hidden="true"></i> Клиенттер</a>
+            <a href="/admin/payments" th:classappend="${section == 'payments'} ? 'is-active'"><i class="bi bi-receipt" aria-hidden="true"></i> Төлемдер</a>
+        </nav>
+        <div class="admin-side-foot">
+            <span class="tiny" style="color:#A89884;padding:0 10px" sec:authentication="name">admin</span>
+            <a href="/" class="btn btn-ghost btn-sm"><i class="bi bi-box-arrow-up-right" aria-hidden="true"></i> Сайтқа өту</a>
+            <form th:action="@{/logout}" method="post">
+                <button type="submit" class="btn btn-ghost btn-sm"><i class="bi bi-box-arrow-right" aria-hidden="true"></i> Шығу</button>
+            </form>
+        </div>
+    </aside>
+</th:block>
+
+<!-- Статусты өзгерту батырмалары: тек рұқсат етілген ауысулар көрсетіледі -->
+<th:block th:fragment="statusActions(b)">
+    <form th:if="${b.status.canTransitionTo('CONFIRMED')}"
+          th:action="@{/admin/bookings/{id}/status(id=${b.id})}" method="post">
+        <input type="hidden" name="target" value="CONFIRMED">
+        <button type="submit" class="btn btn-success btn-sm"><i class="bi bi-check2" aria-hidden="true"></i> Растау</button>
+    </form>
+    <button th:if="${b.status.canTransitionTo('COMPLETED') and b.endDateTime.isAfter(now)}"
+            type="button" class="btn btn-soft btn-sm" disabled title="Брондау аяқталғаннан кейін қолжетімді">
+        <i class="bi bi-flag" aria-hidden="true"></i> Аяқталды</button>
+    <form th:if="${b.status.canTransitionTo('COMPLETED') and !b.endDateTime.isAfter(now)}"
+          th:action="@{/admin/bookings/{id}/status(id=${b.id})}" method="post"
+          data-confirm="Брондау аяқталған деп белгіленеді." data-confirm-title="Аяқталды деп белгілеу керек пе?" data-confirm-ok="Иә, белгілеу">
+        <input type="hidden" name="target" value="COMPLETED">
+        <button type="submit" class="btn btn-soft btn-sm"><i class="bi bi-flag" aria-hidden="true"></i> Аяқталды</button>
+    </form>
+    <form th:if="${b.status.canTransitionTo('CANCELLED')}"
+          th:action="@{/admin/bookings/{id}/status(id=${b.id})}" method="post"
+          data-confirm="Клуб тарапынан тоқтатылғанда клиентке төленген соманың бәрі қайтарылады (демо). Төлем тарихы сақталады."
+          data-confirm-title="Брондауды тоқтату керек пе?" data-confirm-ok="Иә, тоқтату">
+        <input type="hidden" name="target" value="CANCELLED">
+        <button type="submit" class="btn btn-danger btn-sm"><i class="bi bi-x-circle" aria-hidden="true"></i> Брондауды тоқтату</button>
+    </form>
+</th:block>
+</body>
+</html>

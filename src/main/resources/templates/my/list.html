@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="kk" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Брондау тарихы')}"></head>
+<body>
+<div th:replace="~{fragments/layout :: header}"></div>
+
+<main id="main" class="container">
+    <div class="page-head">
+        <nav class="crumbs" aria-label="Навигация жолы">
+            <a href="/">Басты бет</a><i class="bi bi-chevron-right" aria-hidden="true"></i><span>Брондау тарихы</span>
+        </nav>
+        <h1>Брондау тарихы</h1>
+        <p>Осы құрылғыда жасалған немесе расталған брондауларыңыз. Басқа брондауды көру үшін оның нөмірі мен электрондық поштасын енгізіңіз.</p>
+    </div>
+
+    <div class="layout-aside-right">
+        <section aria-labelledby="list-title">
+            <div class="row between" style="margin-bottom:16px">
+                <h2 id="list-title" style="font-size:20px">Менің брондауларым</h2>
+                <form th:if="${!bookings.isEmpty()}" th:action="@{/my-bookings/forget}" method="post"
+                      data-confirm="Брондаулар осы құрылғыдағы тізімнен жасырылады. Оларды кейін нөмір мен электрондық пошта арқылы қайта таба аласыз."
+                      data-confirm-title="Тізімді тазалау керек пе?" data-confirm-ok="Иә, тазалау">
+                    <button type="submit" class="btn btn-ghost btn-sm"><i class="bi bi-eye-slash" aria-hidden="true"></i> Тізімді тазалау</button>
+                </form>
+            </div>
+
+            <div class="stack-sm" th:if="${!bookings.isEmpty()}">
+                <a class="booking-item" th:each="b : ${bookings}" th:href="@{/my-bookings/{n}(n=${b.bookingNumber})}">
+                    <img th:src="${b.room.imageUrl}" alt="" width="96" height="80">
+                    <div style="min-width:0">
+                        <div class="row" style="gap:8px">
+                            <h3 th:text="${b.room.name}">Connect Room</h3>
+                            <span class="badge" th:classappend="${b.status.tone}" th:text="${b.status.label}">Расталған</span>
+                            <span class="badge" th:classappend="${b.paymentStatus.tone}" th:text="${b.paymentStatus.label}">Депозит төленді</span>
+                        </div>
+                        <div class="booking-meta">
+                            <span><i class="bi bi-calendar3" aria-hidden="true"></i> <span th:text="${@fmt.range(b.startDateTime, b.endDateTime)}">14 қазан</span></span>
+                            <span><i class="bi bi-people" aria-hidden="true"></i> <span th:text="${b.guestCount} + ' қонақ'">6</span></span>
+                            <span class="mono" th:text="${b.bookingNumber}">JY-XXXX</span>
+                        </div>
+                    </div>
+                    <div class="booking-money">
+                        <small class="muted">Қалған төлем</small>
+                        <strong th:text="${@fmt.money(b.remainingAmount)}">25 200 ₸</strong>
+                        <small class="muted" th:text="'Жалпы: ' + ${@fmt.money(b.totalAmount)}">36 000 ₸</small>
+                    </div>
+                </a>
+            </div>
+
+            <div class="empty" th:if="${bookings.isEmpty()}">
+                <div class="empty-icon" aria-hidden="true"><i class="bi bi-calendar-heart"></i></div>
+                <h3>Әзірге брондау жоқ</h3>
+                <p>Бөлмені брондағаннан кейін ол осында көрінеді. Бұрын брондау жасасаңыз, оны оң жақтағы форма арқылы табыңыз.</p>
+                <a href="/bookings/new" class="btn btn-primary">Бөлмені брондау</a>
+            </div>
+        </section>
+
+        <aside>
+            <form id="lookup" class="card card-pad sticky" th:action="@{/my-bookings/lookup}" th:object="${lookupForm}" method="post" aria-labelledby="lookup-title">
+                <h2 class="card-title" id="lookup-title"><i class="bi bi-search-heart" aria-hidden="true"></i> Брондауды табу</h2>
+                <p class="card-sub">Қауіпсіздік үшін брондау нөмірі мен ұйымдастырушының электрондық поштасы сәйкес келуі керек.</p>
+                <div class="alert alert-danger" th:if="${#fields.hasGlobalErrors()}" role="alert" style="margin-bottom:14px">
+                    <i class="bi bi-exclamation-octagon" aria-hidden="true"></i>
+                    <span th:each="e : ${#fields.globalErrors()}" th:text="${e}">Қате</span>
+                </div>
+                <div class="stack-sm">
+                    <div class="field" th:classappend="${#fields.hasErrors('bookingNumber')} ? 'has-error'">
+                        <label for="bookingNumber">Брондау нөмірі</label>
+                        <input class="input mono" type="text" th:field="*{bookingNumber}" placeholder="JY-XXXX-XXXX" maxlength="20" autocomplete="off" required>
+                        <p class="field-error" th:if="${#fields.hasErrors('bookingNumber')}" th:errors="*{bookingNumber}">Қате</p>
+                    </div>
+                    <div class="field" th:classappend="${#fields.hasErrors('email')} ? 'has-error'">
+                        <label for="email">Электрондық пошта</label>
+                        <input class="input" type="email" th:field="*{email}" placeholder="name@example.kz" autocomplete="email" required>
+                        <p class="field-error" th:if="${#fields.hasErrors('email')}" th:errors="*{email}">Қате</p>
+                    </div>
+                    <button type="submit" class="btn btn-dark btn-block">Брондауды көрсету</button>
+                </div>
+            </form>
+        </aside>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<div th:replace="~{fragments/layout :: toasts}"></div>
+<dialog th:replace="~{fragments/layout :: confirm}"></dialog>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

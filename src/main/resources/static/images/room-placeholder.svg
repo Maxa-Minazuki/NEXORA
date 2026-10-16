@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" role="img" aria-label="Бөлме суреті">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#EDE2D3"/>
+      <stop offset="1" stop-color="#F6E4DA"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="500" fill="url(#g)"/>
+  <rect x="0" y="360" width="800" height="140" fill="#E3D4C0"/>
+  <rect x="120" y="90" width="230" height="180" rx="10" fill="#FFFEFA" opacity=".85"/>
+  <rect x="140" y="110" width="190" height="140" rx="6" fill="#D9A66F" opacity=".35"/>
+  <rect x="430" y="90" width="250" height="180" rx="10" fill="#FFFEFA" opacity=".6"/>
+  <rect x="250" y="300" width="300" height="24" rx="12" fill="#82776B"/>
+  <rect x="290" y="324" width="10" height="70" fill="#82776B"/>
+  <rect x="500" y="324" width="10" height="70" fill="#82776B"/>
+  <rect x="200" y="320" width="40" height="70" rx="12" fill="#C96F4A"/>
+  <rect x="560" y="320" width="40" height="70" rx="12" fill="#C96F4A"/>
+  <rect x="380" y="240" width="40" height="48" rx="10" fill="#C96F4A" opacity=".85"/>
+</svg>

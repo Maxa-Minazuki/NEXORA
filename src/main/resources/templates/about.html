@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="kk" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Біз туралы')}"></head>
+<body>
+<div th:replace="~{fragments/layout :: header}"></div>
+
+<main id="main">
+    <div class="container page-head">
+        <nav class="crumbs" aria-label="Навигация жолы">
+            <a href="/">Басты бет</a><i class="bi bi-chevron-right" aria-hidden="true"></i><span>Біз туралы</span>
+        </nav>
+    </div>
+
+    <section class="container about-grid">
+        <div>
+            <span class="eyebrow">JYLY туралы</span>
+            <h1 class="section-title" style="font-size:clamp(32px,4.4vw,52px)">«Жылы» — бұл кездесудің атмосферасы</h1>
+            <p class="section-lead" style="max-width:none">JYLY — networking пен іскерлік кездесулерге арналған шағын жеке клуб. Біз адамдар бір-бірімен еркін сөйлесетін,
+                идеялар туатын және серіктестік басталатын кеңістік жасауды мақсат еттік. Брондау жүйесі осы тәжірибенің бір бөлігі:
+                қарапайым, ашық және сенімді.</p>
+            <div class="values">
+                <div class="value">
+                    <div class="feature-icon" aria-hidden="true"><i class="bi bi-cup-hot"></i></div>
+                    <div><h3>Қонақжайлылық</h3><p>Әр қонақты есімімен қарсы аламыз, кофе мен шай — әрқашан дайын.</p></div>
+                </div>
+                <div class="value">
+                    <div class="feature-icon" aria-hidden="true"><i class="bi bi-eye"></i></div>
+                    <div><h3>Ашықтық</h3><p>Баға, депозит және тоқтату ережелері алдын ала белгілі.</p></div>
+                </div>
+                <div class="value">
+                    <div class="feature-icon" aria-hidden="true"><i class="bi bi-cpu"></i></div>
+                    <div><h3>Заманауи технология</h3><p>Бейнеконференция, сымсыз презентация және жылдам интернет.</p></div>
+                </div>
+            </div>
+        </div>
+        <div class="about-photos">
+            <img src="/images/about-1.jpg" alt="Жасыл өсімдіктері бар жарық коворкинг кеңістігі" width="1100" height="733" loading="lazy">
+            <img src="/images/about-2.jpg" alt="Жұмсақ креслолары бар лаунж-аймақ" width="900" height="600" loading="lazy">
+        </div>
+    </section>
+
+    <section class="section-sm">
+        <div class="container numbers">
+            <div class="number-card"><strong th:text="${roomCount}">4</strong><span>брондауға дайын бөлме</span></div>
+            <div class="number-card"><strong>4–30</strong><span>адамға арналған форматтар</span></div>
+            <div class="number-card"><strong th:text="${club.depositPercent} + '%'">30%</strong><span>депозит брондау кезінде</span></div>
+            <div class="number-card"><strong th:text="${club.freeCancellationHours} + ' сағ'">24 сағ</strong><span>тегін тоқтату мерзімі</span></div>
+        </div>
+    </section>
+
+    <section class="section-sm">
+        <div class="container">
+            <div class="cta">
+                <div>
+                    <h2>Бізге келіңіз</h2>
+                    <p>Бөлмелерді таңдап, кездесуіңізді бүгін жоспарлаңыз.</p>
+                </div>
+                <div class="cta-actions">
+                    <a href="/rooms" class="btn btn-primary">Бөлмелерді көру</a>
+                    <a href="/#how" class="btn btn-ghost">Қалай жұмыс істейді</a>
+                </div>
+            </div>
+        </div>
+    </section>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<div th:replace="~{fragments/layout :: toasts}"></div>
+<dialog th:replace="~{fragments/layout :: confirm}"></dialog>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

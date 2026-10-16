@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="kk" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Әкімші · Төлемдер')}"></head>
+<body class="admin-body">
+<div class="admin-shell">
+    <th:block th:replace="~{admin/fragments :: sidebar}"></th:block>
+    <main id="main" class="admin-main">
+        <div class="admin-top">
+            <div><h1>Төлемдер тарихы</h1>
+                <p>Барлық демо операциялар. Жазбалар өзгертілмейді және жойылмайды — бұл қаржы тарихы.</p></div>
+            <span class="badge demo">Демо режим · нақты ақша жоқ</span>
+        </div>
+        <form class="toolbar" action="/admin/payments" method="get">
+            <div class="field">
+                <label for="status">Статус</label>
+                <select class="select" id="status" name="status">
+                    <option value="">Барлығы</option>
+                    <option th:each="s : ${statuses}" th:value="${s}" th:text="${s.label}" th:selected="${s == status}">S</option>
+                </select>
+            </div>
+            <div class="field">
+                <label for="type">Түрі</label>
+                <select class="select" id="type" name="type">
+                    <option value="">Барлығы</option>
+                    <option th:each="t : ${types}" th:value="${t}" th:text="${t.label}" th:selected="${t == type}">T</option>
+                </select>
+            </div>
+            <button type="submit" class="btn btn-dark">Сүзу</button>
+            <a href="/admin/payments" class="btn btn-ghost">Тазалау</a>
+        </form>
+        <div class="table-wrap" th:if="${!payments.isEmpty()}">
+            <table class="table responsive">
+                <thead><tr><th>Күні</th><th>Брондау</th><th>Клиент</th><th>Түрі</th><th>Нөмір</th><th>Статус</th><th class="num">Сома</th></tr></thead>
+                <tbody>
+                <tr th:each="p : ${payments}">
+                    <td data-label="Күні" class="nowrap" th:text="${@fmt.dateTime(p.createdAt)}">Күні</td>
+                    <td data-label="Брондау"><a class="row-link mono" th:href="@{/admin/bookings/{id}(id=${p.booking.id})}" th:text="${p.booking.bookingNumber}">JY</a></td>
+                    <td data-label="Клиент" th:text="${p.booking.customer.fullName}">Аты</td>
+                    <td data-label="Түрі" th:text="${p.paymentType.label}">Түрі</td>
+                    <td data-label="Нөмір" class="mono small" th:text="${p.transactionReference}">DEMO</td>
+                    <td data-label="Статус"><span class="badge" th:classappend="${p.status.tone}" th:text="${p.status.label}">S</span></td>
+                    <td data-label="Сома" class="num" th:text="${(p.paymentType.name() == 'REFUND' ? '−' : '') + @fmt.money(p.amount)}">0</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="empty" th:if="${payments.isEmpty()}"><h3>Деректер табылмады</h3><p>Сүзгіге сай төлем жоқ.</p></div>
+    </main>
+</div>
+<div th:replace="~{fragments/layout :: toasts}"></div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

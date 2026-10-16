@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="kk" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Әкімші · Шолу')}"></head>
+<body class="admin-body">
+<div class="admin-shell">
+    <th:block th:replace="~{admin/fragments :: sidebar}"></th:block>
+    <main id="main" class="admin-main">
+        <div class="admin-top">
+            <div>
+                <h1>Шолу</h1>
+                <p th:text="${@fmt.dayLongIso(today)}">Бүгін</p>
+            </div>
+            <a href="/admin/rooms/new" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg" aria-hidden="true"></i> Бөлме қосу</a>
+        </div>
+
+        <div class="stat-grid">
+            <div class="stat hl">
+                <div class="stat-top">Түсім (таза) <i class="bi bi-cash-stack" aria-hidden="true"></i></div>
+                <strong th:text="${@fmt.money(stats.revenue)}">0 ₸</strong>
+                <small>Сәтті демо төлемдер минус қайтарулар</small>
+            </div>
+            <div class="stat">
+                <div class="stat-top">Өтелмеген қалдық <i class="bi bi-hourglass-split" aria-hidden="true"></i></div>
+                <strong th:text="${@fmt.money(stats.outstanding)}">0 ₸</strong>
+                <small>Тоқтатылмаған брондаулар бойынша</small>
+            </div>
+            <div class="stat">
+                <div class="stat-top">Барлық брондаулар <i class="bi bi-calendar-week" aria-hidden="true"></i></div>
+                <strong th:text="${stats.totalBookings}">0</strong>
+                <small>Тоқтатылған және аяқталғандарымен бірге</small>
+            </div>
+            <div class="stat">
+                <div class="stat-top">Растауды күтуде <i class="bi bi-clock" aria-hidden="true"></i></div>
+                <strong th:text="${stats.pendingBookings}">0</strong>
+                <small><a class="link" href="/admin/bookings?status=PENDING">Тізімді ашу</a></small>
+            </div>
+            <div class="stat">
+                <div class="stat-top">Расталған <i class="bi bi-check2-circle" aria-hidden="true"></i></div>
+                <strong th:text="${stats.confirmedBookings}">0</strong>
+                <small><a class="link" href="/admin/bookings?status=CONFIRMED">Тізімді ашу</a></small>
+            </div>
+            <div class="stat">
+                <div class="stat-top">Белсенді бөлмелер <i class="bi bi-door-open" aria-hidden="true"></i></div>
+                <strong th:text="${stats.activeRooms}">0</strong>
+                <small><a class="link" href="/admin/rooms">Басқару</a></small>
+            </div>
+        </div>
+
+        <div class="admin-grid-2" style="margin-top:20px">
+            <section class="card card-pad chart" aria-labelledby="c1">
+                <div class="chart-head">
+                    <h2 id="c1">Жаңа брондаулар · соңғы 14 күн</h2>
+                    <strong th:text="${#aggregates.sum(stats.daily.![bookings])}">0</strong>
+                </div>
+                <div class="chart-plot" role="img" aria-label="Соңғы 14 күндегі жаңа брондаулар саны, толық мәндер төмендегі кестеде">
+                    <div class="bar-wrap" th:each="d : ${stats.daily}" tabindex="0">
+                        <div class="bar" th:style="'height:' + ${@fmt.percentOfCount(d.bookings, stats.maxDailyBookings)} + '%'"></div>
+                        <span class="bar-tip" th:text="${@fmt.dayMonth(d.date)} + ': ' + ${d.bookings} + ' брондау'">0</span>
+                    </div>
+                </div>
+                <div class="chart-axis" aria-hidden="true"><span th:each="d : ${stats.daily}" th:text="${@fmt.shortDate(d.date)}">01.10</span></div>
+                <details class="table-view">
+                    <summary>Кесте түрінде көрсету</summary>
+                    <table class="table"><thead><tr><th>Күні</th><th class="num">Брондаулар</th><th class="num">Түсім</th></tr></thead>
+                        <tbody><tr th:each="d : ${stats.daily}"><td th:text="${@fmt.dayMonth(d.date)}">1</td>
+                            <td class="num" th:text="${d.bookings}">0</td><td class="num" th:text="${@fmt.money(d.revenue)}">0</td></tr></tbody></table>
+                </details>
+            </section>
+            <section class="card card-pad chart revenue" aria-labelledby="c2">
+                <div class="chart-head">
+                    <h2 id="c2">Таза түсім · соңғы 14 күн</h2>
+                    <strong th:text="${@fmt.money(#aggregates.sum(stats.daily.![revenue]))}">0 ₸</strong>
+                </div>
+                <div class="chart-plot" role="img" aria-label="Соңғы 14 күндегі таза түсім, толық мәндер кестеде">
+                    <div class="bar-wrap" th:each="d : ${stats.daily}" tabindex="0">
+                        <div class="bar" th:style="'height:' + ${@fmt.percent(d.revenue, stats.maxDailyRevenue)} + '%'"></div>
+                        <span class="bar-tip" th:text="${@fmt.dayMonth(d.date)} + ': ' + ${@fmt.money(d.revenue)}">0</span>
+                    </div>
+                </div>
+                <div class="chart-axis" aria-hidden="true"><span th:each="d : ${stats.daily}" th:text="${@fmt.shortDate(d.date)}">01.10</span></div>
+                <p class="tiny muted" style="margin-top:14px">Тек сәтті демо төлемдер ескеріледі; қайтарулар шегеріледі, сәтсіз операциялар кірмейді.</p>
+            </section>
+        </div>
+
+        <section style="margin-top:20px" aria-labelledby="recent-title">
+            <div class="row between" style="margin-bottom:12px">
+                <h2 id="recent-title" style="font-size:19px">Соңғы брондаулар</h2>
+                <a href="/admin/bookings" class="link small">Барлығы <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
+            </div>
+            <div class="table-wrap" th:if="${!stats.recentBookings.isEmpty()}">
+                <table class="table responsive">
+                    <thead><tr><th>Нөмір</th><th>Клиент</th><th>Бөлме</th><th>Уақыты</th><th>Статус</th><th>Төлем</th><th class="num">Сома</th></tr></thead>
+                    <tbody>
+                    <tr th:each="b : ${stats.recentBookings}">
+                        <td data-label="Нөмір"><a class="row-link mono" th:href="@{/admin/bookings/{id}(id=${b.id})}" th:text="${b.bookingNumber}">JY</a></td>
+                        <td data-label="Клиент" th:text="${b.customer.fullName}">Аты</td>
+                        <td data-label="Бөлме" th:text="${b.room.name}">Room</td>
+                        <td data-label="Уақыты" class="nowrap" th:text="${@fmt.range(b.startDateTime, b.endDateTime)}">Күні</td>
+                        <td data-label="Статус"><span class="badge" th:classappend="${b.status.tone}" th:text="${b.status.label}">S</span></td>
+                        <td data-label="Төлем"><span class="badge" th:classappend="${b.paymentStatus.tone}" th:text="${b.paymentStatus.label}">P</span></td>
+                        <td data-label="Сома" class="num" th:text="${@fmt.money(b.totalAmount)}">0</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="empty" th:if="${stats.recentBookings.isEmpty()}"><h3>Деректер табылмады</h3><p>Әзірге брондау жоқ.</p></div>
+        </section>
+    </main>
+</div>
+<div th:replace="~{fragments/layout :: toasts}"></div>
+<dialog th:replace="~{fragments/layout :: confirm}"></dialog>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="kk" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(${roomId == null} ? 'Әкімші · Жаңа бөлме' : 'Әкімші · Бөлмені өңдеу')}"></head>
+<body class="admin-body">
+<div class="admin-shell">
+    <th:block th:replace="~{admin/fragments :: sidebar}"></th:block>
+    <main id="main" class="admin-main">
+        <div class="admin-top">
+            <div>
+                <nav class="crumbs" aria-label="Навигация жолы"><a href="/admin/rooms">Бөлмелер</a><i class="bi bi-chevron-right" aria-hidden="true"></i>
+                    <span th:text="${roomId == null} ? 'Жаңа бөлме' : 'Өңдеу'">Жаңа</span></nav>
+                <h1 th:text="${roomId == null} ? 'Жаңа бөлме' : ${roomForm.name}">Жаңа бөлме</h1>
+            </div>
+        </div>
+
+        <form class="card card-pad stack" style="max-width:860px" method="post" th:object="${roomForm}"
+              th:action="${roomId == null} ? @{/admin/rooms} : @{/admin/rooms/{id}(id=${roomId})}">
+            <div class="alert alert-warning" th:if="${#fields.hasErrors('*')}" role="alert">
+                <i class="bi bi-exclamation-triangle" aria-hidden="true"></i><span>Белгіленген өрістерді тексеріңіз.</span>
+            </div>
+            <div class="form-grid">
+                <div class="field" th:classappend="${#fields.hasErrors('name')} ? 'has-error'">
+                    <label for="name">Атауы</label>
+                    <input class="input" type="text" th:field="*{name}" maxlength="60" required>
+                    <p class="field-error" th:if="${#fields.hasErrors('name')}" th:errors="*{name}">Қате</p>
+                </div>
+                <div class="field" th:classappend="${#fields.hasErrors('type')} ? 'has-error'">
+                    <label for="type">Түрі</label>
+                    <select class="select" th:field="*{type}" required>
+                        <option th:each="t : ${roomTypes}" th:value="${t}" th:text="${t.label}">Type</option>
+                    </select>
+                    <p class="field-error" th:if="${#fields.hasErrors('type')}" th:errors="*{type}">Қате</p>
+                </div>
+                <div class="field span-2" th:classappend="${#fields.hasErrors('shortDescription')} ? 'has-error'">
+                    <label for="shortDescription">Қысқа сипаттама (карточкаға)</label>
+                    <input class="input" type="text" th:field="*{shortDescription}" maxlength="160" required>
+                    <p class="field-error" th:if="${#fields.hasErrors('shortDescription')}" th:errors="*{shortDescription}">Қате</p>
+                </div>
+                <div class="field span-2" th:classappend="${#fields.hasErrors('description')} ? 'has-error'">
+                    <label for="description">Толық сипаттама</label>
+                    <textarea class="textarea" th:field="*{description}" maxlength="2000" rows="4" required></textarea>
+                    <p class="field-error" th:if="${#fields.hasErrors('description')}" th:errors="*{description}">Қате</p>
+                </div>
+            </div>
+            <div class="form-grid-3">
+                <div class="field" th:classappend="${#fields.hasErrors('capacity')} ? 'has-error'">
+                    <label for="capacity">Сыйымдылық, адам</label>
+                    <input class="input" type="number" th:field="*{capacity}" min="1" max="200" required>
+                    <p class="field-error" th:if="${#fields.hasErrors('capacity')}" th:errors="*{capacity}">Қате</p>
+                </div>
+                <div class="field" th:classappend="${#fields.hasErrors('area')} ? 'has-error'">
+                    <label for="area">Аудан, м²</label>
+                    <input class="input" type="number" th:field="*{area}" min="4" max="2000" required>
+                    <p class="field-error" th:if="${#fields.hasErrors('area')}" th:errors="*{area}">Қате</p>
+                </div>
+                <div class="field" th:classappend="${#fields.hasErrors('hourlyRate')} ? 'has-error'">
+                    <label for="hourlyRate">Сағаттық баға, ₸</label>
+                    <input class="input" type="number" th:field="*{hourlyRate}" min="500" step="1" required>
+                    <span class="hint">Жаңа баға тек жаңа брондауларға қолданылады.</span>
+                    <p class="field-error" th:if="${#fields.hasErrors('hourlyRate')}" th:errors="*{hourlyRate}">Қате</p>
+                </div>
+            </div>
+            <div class="form-grid">
+                <div class="field" th:classappend="${#fields.hasErrors('equipmentText')} ? 'has-error'">
+                    <label for="equipmentText">Жабдықтар</label>
+                    <textarea class="textarea" th:field="*{equipmentText}" rows="5" placeholder="Әр жолда бір жабдық"></textarea>
+                    <span class="hint">Әр жолға бір жабдық жазыңыз (ең көбі 20).</span>
+                    <p class="field-error" th:if="${#fields.hasErrors('equipmentText')}" th:errors="*{equipmentText}">Қате</p>
+                </div>
+                <div class="field" th:classappend="${#fields.hasErrors('imageUrl')} ? 'has-error'">
+                    <label for="imageUrl">Сурет сілтемесі</label>
+                    <input class="input" type="text" th:field="*{imageUrl}" maxlength="300" placeholder="/images/rooms/connect.jpg">
+                    <span class="hint">/images/... немесе https://... Бос қалса, әдепкі сурет қойылады.</span>
+                    <p class="field-error" th:if="${#fields.hasErrors('imageUrl')}" th:errors="*{imageUrl}">Қате</p>
+                </div>
+            </div>
+            <label class="check">
+                <input type="checkbox" th:field="*{active}">
+                <span>Белсенді — каталогта көрінеді және брондау қабылдайды</span>
+            </label>
+            <div class="actions">
+                <button type="submit" class="btn btn-primary">Сақтау</button>
+                <a href="/admin/rooms" class="btn btn-ghost">Болдырмау</a>
+            </div>
+        </form>
+    </main>
+</div>
+<div th:replace="~{fragments/layout :: toasts}"></div>
+<dialog th:replace="~{fragments/layout :: confirm}"></dialog>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

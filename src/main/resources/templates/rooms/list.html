@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="kk" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Бөлмелер')}"></head>
+<body>
+<div th:replace="~{fragments/layout :: header}"></div>
+
+<main id="main" class="container">
+    <div class="page-head">
+        <nav class="crumbs" aria-label="Навигация жолы">
+            <a href="/">Басты бет</a><i class="bi bi-chevron-right" aria-hidden="true"></i><span>Бөлмелер</span>
+        </nav>
+        <h1>Клуб бөлмелері</h1>
+        <p>Күн мен уақытты көрсетсеңіз, тек бос бөлмелер көрсетіледі. Барлық сүзгілер дерекқордағы нақты деректермен жұмыс істейді.</p>
+    </div>
+
+    <div class="layout-sidebar">
+        <aside>
+            <form class="card filters sticky" action="/rooms" method="get" aria-labelledby="filters-title">
+                <h2 id="filters-title"><i class="bi bi-sliders" aria-hidden="true"></i> Сүзгілер</h2>
+
+                <div class="field">
+                    <label for="f-date">Күні</label>
+                    <input class="input" type="date" id="f-date" name="date" th:value="${criteria.date}" th:min="${today}" th:max="${maxDate}">
+                </div>
+                <div class="form-grid">
+                    <div class="field">
+                        <label for="f-start">Басталуы</label>
+                        <select class="select" id="f-start" name="start">
+                            <option value="">—</option>
+                            <option th:each="t : ${timeSlots}" th:value="${t}" th:text="${t}"
+                                    th:selected="${criteria.start != null and #temporals.format(criteria.start, 'HH:mm') == t}">10:00</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label for="f-end">Аяқталуы</label>
+                        <select class="select" id="f-end" name="end">
+                            <option value="">—</option>
+                            <option th:each="t : ${timeSlots}" th:value="${t}" th:text="${t}"
+                                    th:selected="${criteria.end != null and #temporals.format(criteria.end, 'HH:mm') == t}">12:00</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="divider"></div>
+                <div class="field">
+                    <label for="f-guests">Қонақтар саны</label>
+                    <input class="input" type="number" id="f-guests" name="guests" min="1" max="200" th:value="${criteria.guests}" placeholder="Мысалы, 6">
+                </div>
+                <div class="field">
+                    <label for="f-price">Ең жоғары баға (₸/сағ)</label>
+                    <select class="select" id="f-price" name="maxPrice">
+                        <option value="">Кез келген</option>
+                        <option th:each="p : ${ {8000, 12000, 15000, 20000} }" th:value="${p}"
+                                th:text="${@fmt.moneyOf(p)} + ' дейін'"
+                                th:selected="${criteria.maxPrice != null and criteria.maxPrice.intValue() == p}">12 000 ₸</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label for="f-type">Бөлме түрі</label>
+                    <select class="select" id="f-type" name="type">
+                        <option value="">Барлығы</option>
+                        <option th:each="t : ${roomTypes}" th:value="${t}" th:text="${t.label}" th:selected="${criteria.type == t}">Networking</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label for="f-sort">Сұрыптау</label>
+                    <select class="select" id="f-sort" name="sort">
+                        <option value="price_asc" th:selected="${criteria.sort == 'price_asc'}">Бағасы: арзаннан қымбатқа</option>
+                        <option value="price_desc" th:selected="${criteria.sort == 'price_desc'}">Бағасы: қымбаттан арзанға</option>
+                        <option value="capacity_asc" th:selected="${criteria.sort == 'capacity_asc'}">Сыйымдылығы: аздан көпке</option>
+                        <option value="capacity_desc" th:selected="${criteria.sort == 'capacity_desc'}">Сыйымдылығы: көптен азға</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block"><i class="bi bi-search" aria-hidden="true"></i> Бөлмелерді іздеу</button>
+                <a href="/rooms" class="btn btn-ghost btn-block" th:classappend="${!criteria.filtered} ? 'is-disabled'"
+                   th:attr="aria-disabled=${!criteria.filtered}">Сүзгілерді тазалау</a>
+            </form>
+        </aside>
+
+        <section aria-live="polite">
+            <div class="alert alert-warning" th:if="${searchError}" style="margin-bottom:18px">
+                <i class="bi bi-exclamation-triangle" aria-hidden="true"></i>
+                <div><strong>Сүзгіні тексеріңіз</strong><span th:text="${searchError}">Қате</span></div>
+            </div>
+
+            <div class="result-bar">
+                <p>
+                    <strong th:text="${result.rooms.size()} + ' бөлме табылды'">4 бөлме табылды</strong>
+                    <span class="muted small" th:if="${result.availabilityChecked}"
+                          th:text="' · ' + ${@fmt.dayMonth(criteria.date)} + ', ' + ${#temporals.format(criteria.start, 'HH:mm')} + '–' + ${#temporals.format(criteria.end, 'HH:mm')} + ' аралығында бос'"></span>
+                </p>
+                <span class="badge warning" th:if="${result.busyCount > 0}"
+                      th:text="${result.busyCount} + ' бөлме бұл уақытта бос емес'">1 бөлме бос емес</span>
+            </div>
+
+            <div class="rooms-grid" th:if="${!result.rooms.isEmpty()}">
+                <th:block th:each="room : ${result.rooms}">
+                    <th:block th:if="${result.availabilityChecked}">
+                        <article th:replace="~{fragments/room-card :: card(${room}, 'free', 'Таңдалған уақытта бос',
+                            @{/bookings/new(room=${room.slug}, date=${criteria.date}, start=${#temporals.format(criteria.start, 'HH:mm')}, end=${#temporals.format(criteria.end, 'HH:mm')}, guests=${criteria.guests})})}"></article>
+                    </th:block>
+                    <th:block th:unless="${result.availabilityChecked}">
+                        <article th:replace="~{fragments/room-card :: card(${room},
+                            ${busyNow.contains(room.id)} ? 'busy' : 'neutral',
+                            ${busyNow.contains(room.id)} ? 'Қазір бос емес' : 'Брондауға ашық',
+                            @{/bookings/new(room=${room.slug}, guests=${criteria.guests})})}"></article>
+                    </th:block>
+                </th:block>
+            </div>
+
+            <div class="empty" th:if="${result.rooms.isEmpty()}">
+                <div class="empty-icon" aria-hidden="true"><i class="bi bi-search"></i></div>
+                <h3>Деректер табылмады</h3>
+                <p th:if="${result.availabilityChecked}">Таңдалған уақытта сүзгіге сай бос бөлме жоқ. Басқа уақытты таңдап, қайта көріңіз.</p>
+                <p th:unless="${result.availabilityChecked}">Сүзгіге сай бөлме жоқ. Шарттарды өзгертіп, қайта көріңіз.</p>
+                <a href="/rooms" class="btn btn-soft">Сүзгілерді тазалау</a>
+            </div>
+        </section>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<div th:replace="~{fragments/layout :: toasts}"></div>
+<dialog th:replace="~{fragments/layout :: confirm}"></dialog>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

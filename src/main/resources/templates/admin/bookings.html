@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="kk" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Әкімші · Брондаулар')}"></head>
+<body class="admin-body">
+<div class="admin-shell">
+    <th:block th:replace="~{admin/fragments :: sidebar}"></th:block>
+    <main id="main" class="admin-main">
+        <div class="admin-top">
+            <div>
+                <h1>Брондаулар</h1>
+                <p>Нөмір, клиент немесе бөлме бойынша іздеңіз; күн мен статус бойынша сүзіңіз.</p>
+            </div>
+        </div>
+
+        <form class="toolbar" action="/admin/bookings" method="get" role="search">
+            <div class="field grow">
+                <label for="q">Іздеу</label>
+                <input class="input" type="search" id="q" name="q" th:value="${q}" placeholder="JY-…, клиент аты, пошта, бөлме">
+            </div>
+            <div class="field">
+                <label for="status">Статус</label>
+                <select class="select" id="status" name="status">
+                    <option value="">Барлығы</option>
+                    <option th:each="s : ${statuses}" th:value="${s}" th:text="${s.label}" th:selected="${s == status}">S</option>
+                </select>
+            </div>
+            <div class="field">
+                <label for="from">Күнінен</label>
+                <input class="input" type="date" id="from" name="from" th:value="${from}">
+            </div>
+            <div class="field">
+                <label for="to">Күніне дейін</label>
+                <input class="input" type="date" id="to" name="to" th:value="${to}">
+            </div>
+            <button type="submit" class="btn btn-dark"><i class="bi bi-search" aria-hidden="true"></i> Іздеу</button>
+            <a href="/admin/bookings" class="btn btn-ghost">Тазалау</a>
+        </form>
+
+        <p class="small muted" style="margin-bottom:12px" th:text="${bookings.size()} + ' брондау'">0</p>
+
+        <div class="table-wrap" th:if="${!bookings.isEmpty()}">
+            <table class="table responsive">
+                <thead><tr><th>Нөмір</th><th>Клиент</th><th>Бөлме</th><th>Уақыты</th><th class="num">Қонақ</th><th>Статус</th><th>Төлем</th><th class="num">Жалпы</th><th class="num">Қалдық</th></tr></thead>
+                <tbody>
+                <tr th:each="b : ${bookings}">
+                    <td data-label="Нөмір"><a class="row-link mono" th:href="@{/admin/bookings/{id}(id=${b.id})}" th:text="${b.bookingNumber}">JY</a></td>
+                    <td data-label="Клиент"><span th:text="${b.customer.fullName}">Аты</span></td>
+                    <td data-label="Бөлме" th:text="${b.room.name}">Room</td>
+                    <td data-label="Уақыты" class="nowrap" th:text="${@fmt.range(b.startDateTime, b.endDateTime)}">Күні</td>
+                    <td data-label="Қонақ" class="num" th:text="${b.guestCount}">0</td>
+                    <td data-label="Статус"><span class="badge" th:classappend="${b.status.tone}" th:text="${b.status.label}">S</span></td>
+                    <td data-label="Төлем"><span class="badge" th:classappend="${b.paymentStatus.tone}" th:text="${b.paymentStatus.label}">P</span></td>
+                    <td data-label="Жалпы" class="num" th:text="${@fmt.money(b.totalAmount)}">0</td>
+                    <td data-label="Қалдық" class="num" th:text="${b.status.name() == 'CANCELLED'} ? '—' : ${@fmt.money(b.remainingAmount)}">0</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="empty" th:if="${bookings.isEmpty()}">
+            <div class="empty-icon" aria-hidden="true"><i class="bi bi-search"></i></div>
+            <h3>Деректер табылмады</h3><p>Сүзгі шарттарын өзгертіп, қайта көріңіз.</p>
+        </div>
+    </main>
+</div>
+<div th:replace="~{fragments/layout :: toasts}"></div>
+<dialog th:replace="~{fragments/layout :: confirm}"></dialog>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>
